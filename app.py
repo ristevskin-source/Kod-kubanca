@@ -1,40 +1,80 @@
-
 import streamlit as st
+import hashlib
+import json
+import smtplib
+import os
+from email.message import EmailMessage
 
-# Prvo slika
-st.image("Screenshot_20260716_172456_com_viber_voip_MediaPreviewActivity.jpg", width=300)
+# --- KONFIGURACIJA ---
+CONFIG_FILE = "config.json"
 
-# Zatim naslov
-st.title("Kod kubanca")
+def ucitaj_config():
+    if not os.path.exists(CONFIG_FILE):
+        return {"admin_hash": "NONE"}
+    with open(CONFIG_FILE, "r") as f:
+        return json.load(f)
 
-# 2. Cenovnik
-cenovnik = {
-    "Obrve": 400,
-    "Šišanje": 1500,
-    "Šišanje i Brada": 2000,
-    "Brada": 1000,
-    "Pranje Kose": 400
-}
+def hesuj(tekst):
+    return hashlib.sha256(tekst.encode()).hexdigest()
 
-# 3. Forma za unos
-with st.form("zakazivanje_forme"):
-    st.subheader("Rezervacija termina")
+def posalji_mail(subjekt, sadrzaj):
+    # Napomena: U st.secrets treba definisati email_user i email_pass
+    try:
+        msg = EmailMessage()
+        msg.set_content(sadrzaj)
+        msg['Subject'] = subjekt
+        msg['From'] = st.secrets["email_user"]
+        msg['To'] = st.secrets["email_user"]
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(st.secrets["email_user"], st.secrets["email_pass"])
+            smtp.send_message(msg)
+    except Exception as e:
+        st.error(f"Greška pri slanju maila: {e}")
+
+# --- GLAVNI DEO ---
+st.title("Zakazivanje termina")
+
+# 1. KLIJENTSKI DEO
+ime = st.text_input("Ime i prezime")
+termin = st.text_input("Željeni termin")
+if st.button("Zakaži termin"):
+    posalji_mail("Novi termin", f"Klijent: {ime}\nTermin: {termin}")
+    st.success("Zahtev uspešno prosleđen!")
+
+st.divider()
+
+# 2. ADMIN DEO
+with st.expander("Admin pristup"):
+    # CSS za "prsten" koji se primenjuje SAMO na polja unutar ovog expander-a
+    st.markdown("""
+        <style>
+        .st-emotion-cache-1vt4y4j input {
+            border: 3.5px solid #4CAF50 !important;
+            border-radius: 10px !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     
-    ime = st.text_input("Ime klijenta")
-    datum = st.date_input("Izaberi datum")
-    vreme = st.time_input("Izaberi vreme")
+    config = ucitaj_config()
     
-    odabrane_usluge = st.multiselect("Izaberi usluge:", list(cenovnik.keys()))
-    
-    submit = st.form_submit_button("Zakaži termin")
-
-# 4. Logika nakon slanja
-if submit:
-    if ime and odabrane_usluge:
-        ukupna_cena = sum([cenovnik[u] for u in odabrane_usluge])
-        st.success(f"Uspešno zakazano za: {ime}")
-        st.write(f"📅 Datum: {datum} u {vreme}")
-        st.write(f"✂️ Usluge: {', '.join(odabrane_usluge)}")
-        st.write(f"💰 Ukupna cena: {ukupna_cena} RSD")
+    # Inicijalizacija ako nema otiska
+    if config["admin_hash"] == "NONE":
+        if st.text_input("Lozinka za inicijalizaciju:", type="password") == "1234":
+            novi_otisak = st.text_input("Postavi novi admin otisak:")
+            if st.button("Aktiviraj Admina"):
+                config["admin_hash"] = hesuj(novi_otisak)
+                with open(CONFIG_FILE, "w") as f: json.dump(config, f)
+                st.rerun()
     else:
-        st.error("Molim te, unesi ime klijenta i izaberi bar jednu uslugu.")
+        # Login za postojećeg admina
+        if not st.session_state.get("admin_ulogovan"):
+            pass_input = st.text_input("Admin lozinka:", type="password")
+            if st.button("Pristupi admin panelu"):
+                if hesuj(pass_input) == config["admin_hash"]:
+                    st.session_state.admin_ulogovan = True
+                    st.rerun()
+        else:
+            st.write("Dobrodošao, Admire. Ovde možeš menjati podešavanja.")
+            if st.button("Odjavi se"):
+                st.session_state.admin_ulogovan = False
+                st.rerun()
