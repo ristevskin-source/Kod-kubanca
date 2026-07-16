@@ -3,8 +3,7 @@ import hashlib
 import json
 import smtplib
 import os
-from email.message 
-import EmailMessage
+from email.message import EmailMessage
 
 # --- KONFIGURACIJA ---
 CONFIG_FILE = "config.json"
