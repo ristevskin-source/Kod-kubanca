@@ -1,14 +1,11 @@
 
 import streamlit as st
 
-# 1. Naslov i Logo
-st.title("KOD KUBANCA")
+# Prvo slika
+st.image("Screenshot_20260716_172456_com_viber_voip_MediaPreviewActivity.jpg", width=300)
 
-# ZAMENI 'logo.png' sa tačnim imenom fajla koji si otpremio (npr. 'barber_logo.jpg')
-try:
-    st.image("logo.png", width=300)
-except:
-    st.warning("Slika nije pronađena. Proveri da li se ime fajla u kodu poklapa sa nazivom na GitHub-u.")
+# Zatim naslov
+st.title("Kod kubanca")
 
 # 2. Cenovnik
 cenovnik = {
