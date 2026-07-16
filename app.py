@@ -2,7 +2,7 @@
 import streamlit as st
 
 # 1. Naslov i Logo
-st.title("💈 Berbernica - Upravljanje terminima")
+st.title("KOD KUBANCA")
 
 # ZAMENI 'logo.png' sa tačnim imenom fajla koji si otpremio (npr. 'barber_logo.jpg')
 try:
