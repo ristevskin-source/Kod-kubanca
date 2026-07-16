@@ -46,8 +46,8 @@ for usluga, cena in cenovnik.items():
     st.write(f"{usluga}: {cena} RSD")
 
 # Prikaz slike (postavi putanju do slike ako je u folderu)
-# st.image("ime_tvoje_slike.jpg", width=300)
-
+st.image("ime_tvoje_slike.jpg", width=300)
+https://github.com/ristevskin-source/Kod-kubanca/blob/main/Screenshot_20260717_011214.jpg
 st.title("Zakazivanje termina")
 
 # 1. KLIJENTSKI DEO
