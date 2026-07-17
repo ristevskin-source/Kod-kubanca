@@ -13,7 +13,8 @@ def ucitaj_config():
     if not os.path.exists(CONFIG_FILE):
         return {"admin_hash": "NONE"}
     with open(CONFIG_FILE, "r") as f:
-        return json.load(f)
+        return json.load(f)6
+      
 
 # --- GLAVNI DEO ---
 st.title("Kod Kubanca")
