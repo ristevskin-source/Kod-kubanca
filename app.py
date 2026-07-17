@@ -4,48 +4,36 @@ import streamlit as st
 if "zakazivanja" not in st.session_state:
     st.session_state.zakazivanja = []
 
-if "admin_logovan" not in st.session_state:
-    st.session_state.admin_logovan = False
-
-# Inicijalne cene
 if "usluge" not in st.session_state:
-    st.session_state.usluge = {
-        "Šišanje": 1000,
-        "Brada": 500,
-        "Šišanje i Brada": 1400,
-        "Pranje kose": 300
-    }
+    st.session_state.usluge = {"Šišanje": 1000, "Brada": 500}
 
-# --- ADMIN PRIJAVA ---
-if not st.session_state.admin_logovan:
-    st.title("Admin prijava")
-    lozinka = st.text_input("Unesi admin lozinku", type="password")
-    if st.button("Prijavi se"):
-        if lozinka == "1234":
-            st.session_state.admin_logovan = True
-            st.rerun()
-        else:
-            st.error("Pogrešna lozinka!")
-    st.stop()
+# --- PROVERA ADMINA ---
+query_params = st.query_params
+je_admin = query_params.get("admin") == "true"
 
-# --- ADMIN KONTROLNA TABLA (Bočna traka) ---
-with st.sidebar:
-    st.header("⚙️ Admin panel")
-    st.subheader("Izmena cena")
-    for usluga in st.session_state.usluge:
-        st.session_state.usluge[usluga] = st.number_input(f"Cena za {usluga}", value=st.session_state.usluge[usluga])
+# --- ADMIN PANEL (Vidljiv samo ako je ?admin=true u linku) ---
+if je_admin:
+    st.sidebar.header("⚙️ Admin Podešavanja")
     
-    if st.button("Odjavi se"):
-        st.session_state.admin_logovan = False
+    # Dodavanje/Izmena usluga
+    nova_usluga = st.sidebar.text_input("Naziv usluge")
+    nova_cena = st.sidebar.number_input("Cena", min_value=0)
+    if st.sidebar.button("Dodaj/Izmeni uslugu"):
+        st.session_state.usluge[nova_usluga] = nova_cena
         st.rerun()
 
-# --- GLAVNI DEO ---
+    st.sidebar.divider()
+    st.sidebar.subheader("Upravljanje terminima")
+    for i, t in enumerate(st.session_state.zakazivanja):
+        if st.sidebar.button(f"Obriši: {t['Ime']}", key=f"del_{i}"):
+            st.session_state.zakazivanja.pop(i)
+            st.rerun()
+
+# --- GLAVNI DEO (Javni) ---
 st.title("Kod Kubanca")
-st.image("Screenshot_20260717_011214.jpg", width=300)
 st.subheader("Planer termina")
 
 with st.form("zakazivanje", clear_on_submit=True):
-    # Koristimo ključeve iz našeg rečnika za selectbox
     izabrana_usluga = st.selectbox("Izaberi uslugu", list(st.session_state.usluge.keys()))
     datum = st.date_input("Izaberi datum")
     ime = st.text_input("Ime i prezime")
@@ -54,19 +42,13 @@ with st.form("zakazivanje", clear_on_submit=True):
 
     if submit:
         if ime and telefon:
-            termin = {
-                "Ime": ime, 
-                "Telefon": telefon, 
-                "Usluga": izabrana_usluga, 
-                "Cena": st.session_state.usluge[izabrana_usluga],
-                "Datum": datum
-            }
+            termin = {"Ime": ime, "Usluga": izabrana_usluga, "Cena": st.session_state.usluge[izabrana_usluga], "Datum": datum}
             st.session_state.zakazivanja.append(termin)
-            st.success(f"Termin dodat! Cena: {st.session_state.usluge[izabrana_usluga]} RSD")
+            st.success("Termin uspešno dodat!")
         else:
-            st.error("Molimo unesite podatke.")
+            st.error("Unesi ime i telefon.")
 
 st.divider()
-st.subheader("Lista zakazanih termina:")
-for i, t in enumerate(st.session_state.zakazivanja):
-    st.write(f"{i+1}. **{t['Ime']}** - {t['Usluga']} ({t['Cena']} RSD) - {t['Datum']}")
+st.subheader("Svi termini:")
+for t in st.session_state.zakazivanja:
+    st.write(f"📅 {t['Datum']} | {t['Ime']} | {t['Usluga']} ({t['Cena']} RSD)")
