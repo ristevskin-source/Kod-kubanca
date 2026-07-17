@@ -8,6 +8,7 @@ if "usluge" not in st.session_state:
     st.session_state.usluge = {"Šišanje": 1000, "Brada": 500}
 
 # --- PROVERA ADMINA ---
+# Uzimamo parametre iz URL-a (npr. ?admin=true)
 query_params = st.query_params
 je_admin = query_params.get("admin") == "true"
 
@@ -31,9 +32,7 @@ if je_admin:
 
 # --- GLAVNI DEO (Javni) ---
 st.title("Kod Kubanca")
-# Ovde je tvoj logo
 st.image("Screenshot_20260717_011214.jpg", width=300)
-
 st.subheader("Planer termina")
 
 with st.form("zakazivanje", clear_on_submit=True):
