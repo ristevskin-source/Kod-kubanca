@@ -33,9 +33,4 @@ for usluga, cena in cenovnik.items():
 st.divider()
 
 # --- FORMA ---
-with st.form("zakazivanje"):
-    st.subheader("Rezervacija termina")
-    ime = st.text_input("Ime i prezime")
-    termin = st.text_input("Željeni termin")
-    if st.form_submit_button("Zakaži"):
-        st.success("Zahtev poslat!")
+with st.form("zakazivanje")
