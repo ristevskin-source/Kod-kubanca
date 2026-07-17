@@ -34,9 +34,7 @@ with st.form("zakazivanje", clear_on_submit=True):
         if t['Datum'] == str(datum):
             if t.get('Usluga') == "BLOKIRANO":
                 # Ako je pauza period, dodaj sve sate iz opsega u zauzete
-                start = svi_termini_dan.index(t['Od'])
-                end = svi_termini_dan.index(t['Do'])
-                zauzeti.extend(svi_termini_dan[start:end+1])
+              
             else:
                 zauzeti.append(t['Vreme'])
     
