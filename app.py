@@ -17,8 +17,6 @@ je_admin = query_params.get("admin") == "true"
 # --- ADMIN PANEL ---
 if je_admin:
     st.sidebar.header("⚙️ Admin Podešavanja")
-    # (Ovde ostaje ista logika za dodavanje usluga i satnica)
-    # ...
     st.sidebar.subheader("Upravljanje terminima")
     for i, t in enumerate(st.session_state.zakazivanja):
         if st.sidebar.button(f"Obriši: {t['Datum']} {t['Vreme']} - {t['Ime']}", key=f"del_{i}"):
@@ -32,14 +30,10 @@ with st.form("zakazivanje", clear_on_submit=True):
     izabrana_usluga = st.selectbox("Izaberi uslugu", list(st.session_state.usluge.keys()))
     datum = st.date_input("Izaberi datum")
     
-    # LOGIKA FILTRIRANJA:
-    # 1. Uzimamo sve termine koji su već zauzeti za taj datum
+    # Filtriranje slobodnih termina
     zauzeti_termini = [t['Vreme'] for t in st.session_state.zakazivanja if str(t['Datum']) == str(datum)]
-    
-    # 2. Pravimo listu samo slobodnih termina
     slobodni_termini = [t for t in st.session_state.radno_vreme if t not in zauzeti_termini]
     
-    # 3. Prikazujemo samo slobodne
     if slobodni_termini:
         izabrano_vreme = st.selectbox("Izaberi slobodan termin", slobodni_termini)
         ime = st.text_input("Ime i prezime")
@@ -51,21 +45,19 @@ with st.form("zakazivanje", clear_on_submit=True):
 
     if submit:
         if ime and telefon:
-            cena, trajanje = st.session_state.usluge[izabrana_usluga]
+            cena, _ = st.session_state.usluge[izabrana_usluga]
             termin = {
-                "Ime": ime, 
-                "Usluga": izabrana_usluga, 
-                "Cena": cena, 
-                "Datum": datum, 
-                "Vreme": izabrano_vreme
+                "Ime": ime, "Telefon": telefon, 
+                "Usluga": izabrana_usluga, "Cena": cena, 
+                "Datum": datum, "Vreme": izabrano_vreme
             }
             st.session_state.zakazivanja.append(termin)
-            st.success(f"Termin za {izabrana_usluga} zakazan u {izabrano_vreme}!")
-            st.rerun()
+            # Potvrda klijentu
+            st.success(f"✅ Uspešno zakazano! {izabrana_usluga} za {datum} u {izabrano_vreme}. Vidimo se!")
         else:
             st.error("Unesi ime i telefon.")
 
 st.divider()
-st.subheader("Svi termini:")
+st.subheader("Zakazani termini:")
 for t in st.session_state.zakazivanja:
-    st.write(f"📅 {t['Datum']} u {t['Vreme']} | {t['Ime']} | {t['Usluga']} ({t['Cena']} RSD)")
+    st.write(f"📅 **{t['Datum']}** | ⏰ **{t['Vreme']}** | 👤 {t['Ime']} ({t['Telefon']}) | ✂️ {t['Usluga']} ({t['Cena']} RSD)")
