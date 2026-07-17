@@ -4,6 +4,7 @@ import os
 
 # --- KONFIGURACIJA ---
 FAJL_TERMINA = "termini.json"
+ADMIN_LOZINKA = "1234" 
 
 # --- FUNKCIJE ---
 def ucitaj_termine():
@@ -18,11 +19,10 @@ def sacuvaj_termine(termini):
         json.dump(termini, f, default=str)
 
 # --- APLIKACIJA ---
-# Postavljanje logotipa
 st.image("Screenshot_20260717_011214.jpg", width=300)
 st.title("Kod Kubanca")
 
-# Forma za zakazivanje
+# --- JAVNI DEO ---
 with st.form("zakazivanje", clear_on_submit=True):
     usluga = st.selectbox("Usluga", ["Šišanje", "Brada"])
     datum = st.date_input("Datum")
@@ -39,28 +39,32 @@ with st.form("zakazivanje", clear_on_submit=True):
         else:
             st.error("Molim vas, popunite sva polja.")
 
-# --- ADMIN PANEL ---
-st.divider()
-if st.checkbox("Prikaži admin izveštaj"):
+# --- ADMIN DEO (Sve ispod ovoga je zaštićeno) ---
+st.sidebar.title("Admin Pristup")
+lozinka = st.sidebar.text_input("Unesite lozinku:", type="password")
+
+if lozinka == ADMIN_LOZINKA:
+    st.sidebar.success("Dobrodošao, gazda!")
+    st.divider()
+    st.header("Admin Kontrolna Tabla")
+    
     termini = ucitaj_termine()
     
     if not termini:
         st.info("Nema zakazanih termina.")
     else:
-        # 1. Pregled po mesecima
+        # Pregled po mesecima
         meseci = sorted(list(set([t['Datum'][:7] for t in termini])))
-        izabrani_mesec = st.selectbox("Izaberi mesec za pregled:", meseci)
+        izabrani_mesec = st.selectbox("Izaberi mesec:", meseci)
         filtrirani = [t for t in termini if t['Datum'].startswith(izabrani_mesec)]
         
-        # Prikaz svih termina (uključujući zauzete i blokirane)
-        st.write(f"### Svi termini i blokade za {izabrani_mesec}")
+        st.write(f"### Detaljni termini za {izabrani_mesec}")
         st.dataframe(filtrirani, use_container_width=True)
         
-        # Kalkulacija prometa (samo za usluge, ne za blokirane termine)
         ukupno = sum([1000 if t['Usluga'] == "Šišanje" else 500 for t in filtrirani if t['Usluga'] != "BLOKIRANO"])
-        st.metric("Promet za izabrani mesec", f"{ukupno} RSD")
+        st.metric("Promet", f"{ukupno} RSD")
 
-        # 2. Blokiranje termina
+        # Blokiranje
         st.subheader("Blokiraj termin (Pauza)")
         with st.form("blokiranje", clear_on_submit=True):
             datum_pauze = st.date_input("Datum pauze")
@@ -71,3 +75,5 @@ if st.checkbox("Prikaži admin izveštaj"):
                 termini.append({"Ime": "PAUZA", "Telefon": "-", "Datum": str(datum_pauze), "Vreme": vreme_pauze, "Usluga": "BLOKIRANO"})
                 sacuvaj_termine(termini)
                 st.rerun()
+elif lozinka != "":
+    st.sidebar.error("Pogrešna lozinka!")
