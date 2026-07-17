@@ -20,7 +20,6 @@ st.title("Kod Kubanca")
 
 st.image("Screenshot_20260717_011214.jpg", width=300)
 
-Screenshot_20260717_011214.jpg
 st.subheader("Naš cenovnik")
 cenovnik = {
     "Šišanje": 1500,
