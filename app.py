@@ -34,7 +34,7 @@ for usluga, cena in cenovnik.items():
 st.divider()
 
 # --- FORMA ---
-with st.form("zakazivanje")
+with st.form("zakazivanje") :
 
 # 1. Padajući meni za usluge
      izabrana_usluga = st.selectbox("Izaberi uslugu", list(cenovnik.keys()))
