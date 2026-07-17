@@ -30,9 +30,6 @@ with st.form("zakazivanje", clear_on_submit=True):
     
     termini = ucitaj_termine()
     zauzeti = []
-    
-        import streamlit as st
-import json
 import os
 
 # --- KONFIGURACIJA ---
