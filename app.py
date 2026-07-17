@@ -1,4 +1,5 @@
 import streamlit as st
+import datetime
 
 # --- STANJE APLIKACIJE ---
 if "zakazivanja" not in st.session_state:
@@ -17,6 +18,12 @@ je_admin = query_params.get("admin") == "true"
 # --- ADMIN PANEL ---
 if je_admin:
     st.sidebar.header("⚙️ Admin Podešavanja")
+    
+    # Statistika prometa
+    st.sidebar.subheader("📈 Statistika prometa")
+    ukupan_promet = sum([t['Cena'] for t in st.session_state.zakazivanja])
+    st.sidebar.metric("Ukupan promet", f"{ukupan_promet} RSD")
+    
     st.sidebar.subheader("Upravljanje terminima")
     for i, t in enumerate(st.session_state.zakazivanja):
         d_str = t['Datum'].strftime('%d.%m.%Y.')
@@ -25,13 +32,18 @@ if je_admin:
             st.rerun()
 
 # --- GLAVNI DEO ---
+# Postavljanje logotipa
+try:
+    st.image("Screenshot_20260717_011214.jpg", width=300)
+except:
+    st.warning("Logo nije pronađen (fajl 'logo.png' treba da bude u folderu).")
+
 st.title("Kod Kubanca")
 
 with st.form("zakazivanje", clear_on_submit=True):
     izabrana_usluga = st.selectbox("Izaberi uslugu", list(st.session_state.usluge.keys()))
     datum = st.date_input("Izaberi datum")
     
-    # Filtriranje slobodnih termina
     zauzeti_termini = [t['Vreme'] for t in st.session_state.zakazivanja if str(t['Datum']) == str(datum)]
     slobodni_termini = [t for t in st.session_state.radno_vreme if t not in zauzeti_termini]
     
