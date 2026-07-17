@@ -41,7 +41,21 @@ with st.form("zakazivanje", clear_on_submit=True):
     usluga_naziv = izbor.split(" - ")[0]
     datum = st.date_input("Datum")
     
+    termini = ucitaj_termine()
+    zauzeti = []
+    blokirani_periodi = []
     
+    for t in termini:
+        if t['Datum'] == str(datum):
+            if t.get('Usluga') == "BLOKIRANO":
+                start = svi_termini_dan.index(t['Od'])
+                end = svi_termini_dan.index(t['Do'])
+                zauzeti.extend(svi_termini_dan[start:end+1])
+                blokirani_periodi.append(f"{t['Od']} - {t['Do']}")
+            else:
+                zauzeti.append(t['Vreme'])
+    
+    slobodni = [t for t in svi_termini_dan if t not in zauzeti]
     
     vreme = st.selectbox("Vreme", slobodni if slobodni else ["Nema slobodnih termina"])
     ime = st.text_input("Ime")
