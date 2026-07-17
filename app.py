@@ -33,24 +33,6 @@ with st.form("zakazivanje", clear_on_submit=True):
 import os
 
 # --- KONFIGURACIJA ---
-FAJL_TERMINA = "termini.json"
-ADMIN_LOZINKA = "1234" 
-
-# --- FUNKCIJE ---
-def ucitaj_termine():
-    if os.path.exists(FAJL_TERMINA):
-        with open(FAJL_TERMINA, "r") as f:
-            try: return json.load(f)
-            except: return []
-    return []
-
-def sacuvaj_termine(termini):
-    with open(FAJL_TERMINA, "w") as f:
-        json.dump(termini, f, default=str)
-
-# --- APLIKACIJA ---
-st.image("Screenshot_20260717_011214.jpg", width=300)
-st.title("Kod Kubanca")
 
 # --- JAVNI DEO ---
 svi_termini_dan = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"]
