@@ -1,9 +1,6 @@
 import streamlit as st
-import hashlib
 import json
 import os
-import smtplib
-from email.message import EmailMessage
 
 # --- KONFIGURACIJA ---
 CONFIG_FILE = "config.json"
@@ -36,8 +33,11 @@ with st.form("zakazivanje"):
     izabrana_usluga = st.selectbox("Izaberi uslugu", list(cenovnik.keys()))
     datum = st.date_input("Izaberi datum")
     ime = st.text_input("Ime i prezime")
-    telefon = st.text_input("Broj telefona", required=True)
+    telefon = st.text_input("Broj telefona")
     submit = st.form_submit_button("Zakaži")
 
     if submit:
-        st.success(f"Zahtev za {izabrana_usluga} na dan {datum} je poslat za {ime} (tel: {telefon})!")
+        if not telefon:
+            st.error("Molimo vas da unesete broj telefona!")
+        else:
+            st.success(f"Zahtev za {izabrana_usluga} na dan {datum} je poslat za {ime} (tel: {telefon})!")
