@@ -1,27 +1,15 @@
 import streamlit as st
-import smtplib
-from email.message import EmailMessage
 
-# --- FUNKCIJA ZA SLANJE EMAIL-A ---
-def posalji_email(ime, telefon, usluga, datum):
-    msg = EmailMessage()
-    msg.set_content(f"Novo zakazivanje!\n\nIme: {ime}\nTelefon: {telefon}\nUsluga: {usluga}\nDatum: {datum}")
-    msg['Subject'] = 'Novo zakazivanje - Kod Kubanca'
-    msg['From'] = 'ristevskin@gmail.com'
-    msg['To'] = 'ristevskin@gmail.com'
-
-    # Koristimo tvoju lozinku
-    password = 'tatarista1199111' 
-    
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login('ristevskin@gmail.com', password)
-        smtp.send_message(msg)
+# --- STANJE APLIKACIJE ---
+if "zakazivanja" not in st.session_state:
+    st.session_state.zakazivanja = []
 
 # --- ADMIN PROVERA ---
 if "admin_logovan" not in st.session_state:
     st.session_state.admin_logovan = False
 
 if not st.session_state.admin_logovan:
+    st.title("Admin prijava")
     lozinka = st.text_input("Unesi admin lozinku", type="password")
     if st.button("Prijavi se"):
         if lozinka == "1234":
@@ -33,27 +21,32 @@ if not st.session_state.admin_logovan:
 
 # --- GLAVNI DEO ---
 st.title("Kod Kubanca")
-st.image("Screenshot_20260717_011214.jpg", width=300)
+st.subheader("Planer termina")
 
-cenovnik = {"Šišanje": 1500, "Brada": 1000, "Šišanje i Brada": 2000, "Pranje kose": 400}
-for usluga, cena in cenovnik.items():
-    st.write(f"{usluga}: {cena} RSD")
-
-st.divider()
-
-with st.form("zakazivanje"):
-    izabrana_usluga = st.selectbox("Izaberi uslugu", list(cenovnik.keys()))
+with st.form("zakazivanje", clear_on_submit=True):
+    izabrana_usluga = st.selectbox("Izaberi uslugu", ["Šišanje", "Brada", "Šišanje i Brada", "Pranje kose"])
     datum = st.date_input("Izaberi datum")
     ime = st.text_input("Ime i prezime")
     telefon = st.text_input("Broj telefona")
     submit = st.form_submit_button("Zakaži")
 
     if submit:
-        if not telefon:
-            st.error("Molimo vas da unesete broj telefona!")
+        if ime and telefon:
+            termin = {"Ime": ime, "Telefon": telefon, "Usluga": izabrana_usluga, "Datum": datum}
+            st.session_state.zakazivanja.append(termin)
+            st.success("Termin uspešno dodat u listu!")
         else:
-            try:
-                posalji_email(ime, telefon, izabrana_usluga, datum)
-                st.success("Uspešno zakazano i poslato na mail!")
-            except Exception as e:
-                st.error(f"Greška pri slanju maila: {e}")
+            st.error("Molimo unesite ime i broj telefona.")
+
+st.divider()
+st.subheader("Lista zakazanih termina:")
+
+if not st.session_state.zakazivanja:
+    st.write("Nema zakazanih termina za danas.")
+else:
+    for i, t in enumerate(st.session_state.zakazivanja):
+        st.write(f"{i+1}. **{t['Ime']}** ({t['Telefon']}) - {t['Usluga']} ({t['Datum']})")
+
+if st.button("Obriši sve termine"):
+    st.session_state.zakazivanja = []
+    st.rerun()
