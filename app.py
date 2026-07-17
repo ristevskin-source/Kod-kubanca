@@ -42,6 +42,7 @@ with st.form("zakazivanje", clear_on_submit=True):
     datum = st.date_input("Datum")
     
     termini = ucitaj_termine()
+    st.write(termini) 
     zauzeti = []
     blokirani_periodi = []
     
