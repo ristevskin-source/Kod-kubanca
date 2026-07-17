@@ -19,8 +19,9 @@ def sacuvaj_termine(termini):
         json.dump(termini, f, default=str)
 
 # --- APLIKACIJA ---
-st.title("Kod Kubanca")
 st.image("Screenshot_20260717_011214.jpg", width=300)
+st.title("Kod Kubanca")
+
 # --- JAVNI DEO ---
 svi_termini_dan = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"]
 with st.form("zakazivanje", clear_on_submit=True):
@@ -32,7 +33,6 @@ with st.form("zakazivanje", clear_on_submit=True):
     
     for t in termini:
         if t['Datum'] == str(datum):
-            # Sigurnosna provera
             if t.get('Usluga') == "BLOKIRANO" and 'Od' in t and 'Do' in t:
                 start = svi_termini_dan.index(t['Od'])
                 end = svi_termini_dan.index(t['Do'])
@@ -43,17 +43,18 @@ with st.form("zakazivanje", clear_on_submit=True):
     slobodni = [t for t in svi_termini_dan if t not in zauzeti]
     vreme = st.selectbox("Vreme", slobodni if slobodni else ["Nema slobodnih termina"])
     
-    ime = st.text_input("Ime")
+    # Obavezna polja
+    ime_prezime = st.text_input("Ime i prezime")
     telefon = st.text_input("Telefon")
     
     if st.form_submit_button("Zakaži"):
-        if slobodni and ime and telefon:
-            termini.append({"Ime": ime, "Telefon": telefon, "Datum": str(datum), "Vreme": vreme, "Usluga": usluga})
+        if slobodni and ime_prezime and telefon:
+            termini.append({"Ime i prezime": ime_prezime, "Telefon": telefon, "Datum": str(datum), "Vreme": vreme, "Usluga": usluga})
             sacuvaj_termine(termini)
             st.success("Uspešno zakazano!")
             st.rerun()
         else:
-            st.error("Popunite sva polja.")
+            st.error("Molimo vas, popunite sva polja (Ime i prezime, Telefon).")
 
 # --- ADMIN DEO ---
 st.sidebar.title("Admin")
