@@ -1,7 +1,6 @@
 import streamlit as st
 import json
 import os
-from datetime import datetime
 
 # --- KONFIGURACIJA ---
 FAJL_TERMINA = "termini.json"
@@ -23,20 +22,24 @@ def sacuvaj_termin(novi_termin):
         json.dump(termini, f, default=str)
 
 # --- APLIKACIJA ---
+st.image("Screenshot_20260717_011214.jpg", width=300)
 st.title("Kod Kubanca")
 
 # Forma za zakazivanje
 with st.form("zakazivanje", clear_on_submit=True):
     usluga = st.selectbox("Usluga", ["Šišanje", "Brada"])
     datum = st.date_input("Datum")
-    vreme = st.selectbox("Vreme", ["09:00", "10:00", "11:00", "12:00"])
+    vreme = st.selectbox("Vreme", ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"])
     ime = st.text_input("Ime")
     telefon = st.text_input("Telefon")
     
     if st.form_submit_button("Zakaži"):
-        novi = {"Ime": ime, "Datum": str(datum), "Vreme": vreme, "Usluga": usluga}
-        sacuvaj_termin(novi)
-        st.success("Uspešno zakazano!")
+        if ime and telefon:
+            novi = {"Ime": ime, "Datum": str(datum), "Vreme": vreme, "Usluga": usluga}
+            sacuvaj_termin(novi)
+            st.success("Uspešno zakazano!")
+        else:
+            st.error("Molim vas, popunite sva polja.")
 
 # --- ADMIN PANEL ---
 st.divider()
@@ -45,6 +48,6 @@ if st.checkbox("Prikaži admin izveštaj"):
     st.write("### Svi termini")
     st.table(termini)
     
-    # Izračunavanje prometa (primer za 1000 RSD po terminu)
-    promet = len(termini) * 1000
-    st.metric("Ukupan promet", f"{promet} RSD")
+    # Izračunavanje prometa (pretpostavljamo cenu od 1000 za šišanje i 500 za bradu)
+    ukupno = sum([1000 if t['Usluga'] == "Šišanje" else 500 for t in termini])
+    st.metric("Ukupan promet", f"{ukupno} RSD")
