@@ -18,7 +18,7 @@ def ucitaj_config():
 st.title("Kod Kubanca")
 
 # Ovde postavi putanju do slike ako je u istom folderu
-#st.image(""Screenshot_20260717_011214.jpg width=300)
+Screenshot_20260717_011214.jpg
 Screenshot_20260717_011214.jpg
 st.subheader("Naš cenovnik")
 cenovnik = {
