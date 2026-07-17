@@ -1,4 +1,4 @@
-
+7
 import streamlit as st
 import hashlib
 import json
@@ -49,4 +49,4 @@ with st.form("zakazivanje") :
      submit = st.form_submit_button("Zakaži")
 
      if submit:
-     Ć st.success(f"Zahtev za {izabrana_usluga} na dan {datum} je poslat!")
+         st.success(f"Zahtev za {izabrana_usluga} na dan {datum} je poslat!")
