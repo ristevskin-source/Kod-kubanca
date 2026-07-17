@@ -37,16 +37,16 @@ st.divider()
      with st.form("zakazivanje")
 
 # 1. Padajući meni za usluge
-         izabrana_usluga = st.selectbox("Izaberi uslugu", list(cenovnik.keys()))
+          izabrana_usluga = st.selectbox("Izaberi uslugu", list(cenovnik.keys()))
 
 # 2. Birač datuma
-         datum = st.date_input("Izaberi datum")
+          datum = st.date_input("Izaberi datum")
 
 # 3. Dodatni unos (npr. ime)
-         ime = st.text_input("Ime i prezime")
+          ime = st.text_input("Ime i prezime")
 
 # 4. Dugme za slanje
-         submit = st.form_submit_button("Zakaži")
+          submit = st.form_submit_button("Zakaži")
 
-         if submit:
-         st.success(f"Zahtev za {izabrana_usluga} na dan {datum} je poslat!")
+          if submit:
+          st.success(f"Zahtev za {izabrana_usluga} na dan {datum} je poslat!")
