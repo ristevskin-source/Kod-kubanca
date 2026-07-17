@@ -20,7 +20,7 @@ def sacuvaj_termine(termini):
 
 # --- APLIKACIJA ---
 st.title("Kod Kubanca")
-
+st.image("Screenshot_20260717_011214.jpg", width=300)
 # --- JAVNI DEO ---
 svi_termini_dan = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"]
 with st.form("zakazivanje", clear_on_submit=True):
