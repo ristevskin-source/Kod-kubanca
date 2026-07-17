@@ -9,19 +9,16 @@ FAJL_TERMINA = "termini.json"
 def ucitaj_termine():
     if os.path.exists(FAJL_TERMINA):
         with open(FAJL_TERMINA, "r") as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                return []
+            try: return json.load(f)
+            except: return []
     return []
 
-def sacuvaj_termin(novi_termin):
-    termini = ucitaj_termine()
-    termini.append(novi_termin)
+def sacuvaj_termine(termini):
     with open(FAJL_TERMINA, "w") as f:
         json.dump(termini, f, default=str)
 
 # --- APLIKACIJA ---
+# Postavljanje logotipa
 st.image("Screenshot_20260717_011214.jpg", width=300)
 st.title("Kod Kubanca")
 
@@ -35,8 +32,9 @@ with st.form("zakazivanje", clear_on_submit=True):
     
     if st.form_submit_button("Zakaži"):
         if ime and telefon:
-            novi = {"Ime": ime, "Datum": str(datum), "Vreme": vreme, "Usluga": usluga}
-            sacuvaj_termin(novi)
+            termini = ucitaj_termine()
+            termini.append({"Ime": ime, "Telefon": telefon, "Datum": str(datum), "Vreme": vreme, "Usluga": usluga})
+            sacuvaj_termine(termini)
             st.success("Uspešno zakazano!")
         else:
             st.error("Molim vas, popunite sva polja.")
@@ -45,9 +43,31 @@ with st.form("zakazivanje", clear_on_submit=True):
 st.divider()
 if st.checkbox("Prikaži admin izveštaj"):
     termini = ucitaj_termine()
-    st.write("### Svi termini")
-    st.table(termini)
     
-    # Izračunavanje prometa (pretpostavljamo cenu od 1000 za šišanje i 500 za bradu)
-    ukupno = sum([1000 if t['Usluga'] == "Šišanje" else 500 for t in termini])
-    st.metric("Ukupan promet", f"{ukupno} RSD")
+    if not termini:
+        st.info("Nema zakazanih termina.")
+    else:
+        # 1. Pregled po mesecima
+        meseci = sorted(list(set([t['Datum'][:7] for t in termini])))
+        izabrani_mesec = st.selectbox("Izaberi mesec za pregled:", meseci)
+        filtrirani = [t for t in termini if t['Datum'].startswith(izabrani_mesec)]
+        
+        # Prikaz svih termina (uključujući zauzete i blokirane)
+        st.write(f"### Svi termini i blokade za {izabrani_mesec}")
+        st.dataframe(filtrirani, use_container_width=True)
+        
+        # Kalkulacija prometa (samo za usluge, ne za blokirane termine)
+        ukupno = sum([1000 if t['Usluga'] == "Šišanje" else 500 for t in filtrirani if t['Usluga'] != "BLOKIRANO"])
+        st.metric("Promet za izabrani mesec", f"{ukupno} RSD")
+
+        # 2. Blokiranje termina
+        st.subheader("Blokiraj termin (Pauza)")
+        with st.form("blokiranje", clear_on_submit=True):
+            datum_pauze = st.date_input("Datum pauze")
+            vreme_pauze = st.selectbox("Vreme pauze", ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"])
+            
+            if st.form_submit_button("Potvrdi blokiranje"):
+                termini = ucitaj_termine()
+                termini.append({"Ime": "PAUZA", "Telefon": "-", "Datum": str(datum_pauze), "Vreme": vreme_pauze, "Usluga": "BLOKIRANO"})
+                sacuvaj_termine(termini)
+                st.rerun()
