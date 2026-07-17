@@ -18,15 +18,15 @@ def ucitaj_config():
 st.title("Kod Kubanca")
 
 # Ovde postavi putanju do slike ako je u istom folderu
-#st.image("", width=300)
-
+#st.image(""Screenshot_20260717_011214.jpg width=300)
+Screenshot_20260717_011214.jpg
 st.subheader("Naš cenovnik")
 cenovnik = {
     "Šišanje": 1500,
     "Brada": 1000,
     "Šišanje i Brada": 2000,
     "Pranje kose": 400
-}
+
 for usluga, cena in cenovnik.items():
     st.write(f"{usluga}: {cena} RSD")
 
