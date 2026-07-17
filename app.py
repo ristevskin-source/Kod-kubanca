@@ -16,7 +16,7 @@ def ucitaj_config():
 
 # --- GLAVNI DEO ---
 st.title("Kod Kubanca")
-# st.image("Screenshot_20260717_011214.jpg", width=300)
+st.image("Screenshot_20260717_011214.jpg", width=300)
 
 st.subheader("Naš cenovnik")
 cenovnik = {
@@ -36,7 +36,8 @@ with st.form("zakazivanje"):
     izabrana_usluga = st.selectbox("Izaberi uslugu", list(cenovnik.keys()))
     datum = st.date_input("Izaberi datum")
     ime = st.text_input("Ime i prezime")
+    telefon = st.text_input("Broj telefona", required=True)
     submit = st.form_submit_button("Zakaži")
 
     if submit:
-        st.success(f"Zahtev za {izabrana_usluga} na dan {datum} je poslat!")
+        st.success(f"Zahtev za {izabrana_usluga} na dan {datum} je poslat za {ime} (tel: {telefon})!")
