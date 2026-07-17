@@ -19,7 +19,8 @@ if je_admin:
     st.sidebar.header("⚙️ Admin Podešavanja")
     st.sidebar.subheader("Upravljanje terminima")
     for i, t in enumerate(st.session_state.zakazivanja):
-        if st.sidebar.button(f"Obriši: {t['Datum']} {t['Vreme']} - {t['Ime']}", key=f"del_{i}"):
+        d_str = t['Datum'].strftime('%d.%m.%Y.')
+        if st.sidebar.button(f"Obriši: {d_str} {t['Vreme']} - {t['Ime']}", key=f"del_{i}"):
             st.session_state.zakazivanja.pop(i)
             st.rerun()
 
@@ -52,12 +53,14 @@ with st.form("zakazivanje", clear_on_submit=True):
                 "Datum": datum, "Vreme": izabrano_vreme
             }
             st.session_state.zakazivanja.append(termin)
-            # Potvrda klijentu
-            st.success(f"✅ Uspešno zakazano! {izabrana_usluga} za {datum} u {izabrano_vreme}. Vidimo se!")
+            
+            datum_formatiran = datum.strftime('%d.%m.%Y.')
+            st.success(f"✅ Uspešno zakazano! {izabrana_usluga} za {datum_formatiran} u {izabrano_vreme}. Vidimo se!")
         else:
             st.error("Unesi ime i telefon.")
 
 st.divider()
 st.subheader("Zakazani termini:")
 for t in st.session_state.zakazivanja:
-    st.write(f"📅 **{t['Datum']}** | ⏰ **{t['Vreme']}** | 👤 {t['Ime']} ({t['Telefon']}) | ✂️ {t['Usluga']} ({t['Cena']} RSD)")
+    d = t['Datum'].strftime('%d.%m.%Y.')
+    st.write(f"📅 **{d}** | ⏰ **{t['Vreme']}** | 👤 {t['Ime']} ({t['Telefon']}) | ✂️ {t['Usluga']} ({t['Cena']} RSD)")
