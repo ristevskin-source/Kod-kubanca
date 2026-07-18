@@ -14,7 +14,7 @@ def sacuvaj_termine(termini):
     st.write("Podaci bi ovde bili sačuvani (funkcija trenutno neaktivna)")
 
 # --- APLIKACIJA ---
-# st.image("Screenshot_20260717_011214.jpg", width=300) # Proveri da li ovaj fajl postoji u folderu
+st.image("Screenshot_20260717_011214.jpg", width=300) # Proveri da li ovaj fajl postoji u folderu
 st.title("Kod Kubanca")
 
 # --- JAVNI DEO ---
