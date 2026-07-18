@@ -11,7 +11,7 @@ CENE = {"Šišanje": 2000, "Brada": 700, "Pranje kose": 400}
 def init_db():
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
-    # CREATE TABLE IF NOT EXISTS čuva postojeće podatke
+    # Čuvamo podatke koristeći IF NOT EXISTS
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                   usluga TEXT, datum TEXT, vreme TEXT, 
@@ -27,12 +27,6 @@ def upisi_termin(usluga, datum, vreme, ime, telefon):
               (usluga, str(datum), vreme, ime, telefon, cena))
     conn.commit()
     conn.close()
-
-def dohvati_sve_termine():
-    conn = sqlite3.connect('termini.db')
-    df = pd.read_sql_query("SELECT * FROM rezervacije", conn)
-    conn.close()
-    return df
 
 init_db()
 
@@ -50,8 +44,8 @@ with st.form("zakazivanje", clear_on_submit=True):
     if st.form_submit_button("Zakaži"):
         if ime_prezime and telefon:
             upisi_termin(usluga, datum, vreme, ime_prezime, telefon)
-            # POTVRDA KLIJENTU
-            st.success(f"Uspešno zakazano: {usluga} za {datum} u {vreme}. Hvala!")
+            st.success(f"Uspešno zakazano: {usluga} za {datum} u {vreme}.")
+            st.rerun() # Osvežava aplikaciju da prikaže promene
         else:
             st.error("Molim te, popuni ime i telefon.")
 
@@ -60,11 +54,13 @@ st.sidebar.title("Admin")
 lozinka = st.sidebar.text_input("Lozinka:", type="password")
 
 if lozinka == "1234":
-    df = dohvati_sve_termine()
+    conn = sqlite3.connect('termini.db')
+    df = pd.read_sql_query("SELECT * FROM rezervacije", conn)
+    conn.close()
+    
     st.subheader("Pregled svih zakazanih termina")
     st.table(df)
     
-    # ZBIRNI PROMET
     st.subheader("Finansijski pregled")
     danas = str(date.today())
     promet_danas = df[df['datum'] == danas]['cena'].sum()
