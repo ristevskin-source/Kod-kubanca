@@ -7,16 +7,7 @@ DOSTUPNI_TERMINI = [f"{sat:02d}:00" for sat in range(9, 21)]
 CENE = {"Šišanje": 2000, "Brada": 700, "Pranje kose": 400}
 
 # --- BAZA PODATAKA ---
-def init_db():
-    conn = sqlite3.connect
-    c = conn.cursor()
-    # Dodata kolona 'cena'
-    c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                  usluga TEXT, datum TEXT, vreme TEXT, 
-                  ime TEXT, telefon TEXT, cena INTEGER)''')
-    conn.commit()
-    conn.close()
+
 
 def upisi_termin(usluga, datum, vreme, ime, telefon):
     conn = sqlite3.connect('termini.db')
