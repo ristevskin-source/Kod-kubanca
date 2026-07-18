@@ -1,13 +1,23 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+from datetime import date
 
 # --- KONFIGURACIJA ---
 DOSTUPNI_TERMINI = [f"{sat:02d}:00" for sat in range(9, 21)]
 CENE = {"Šišanje": 2000, "Brada": 700, "Pranje kose": 400}
 
 # --- BAZA PODATAKA ---
-
+def init_db():
+    conn = sqlite3.connect('termini.db')
+    c = conn.cursor()
+    c.execute("DROP TABLE IF EXISTS rezervacije")
+    c.execute('''CREATE TABLE rezervacije 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  usluga TEXT, datum TEXT, vreme TEXT, 
+                  ime TEXT, telefon TEXT, cena INTEGER)''')
+    conn.commit()
+    conn.close()
 
 def upisi_termin(usluga, datum, vreme, ime, telefon):
     conn = sqlite3.connect('termini.db')
@@ -21,7 +31,6 @@ def upisi_termin(usluga, datum, vreme, ime, telefon):
 init_db()
 
 # --- APLIKACIJA ---
-st.image("IMG_20260718_151846.jpg", width=300)
 st.title("Kod Kubanca")
 
 with st.form("zakazivanje", clear_on_submit=True):
@@ -34,7 +43,7 @@ with st.form("zakazivanje", clear_on_submit=True):
     if st.form_submit_button("Zakaži"):
         if ime_prezime and telefon:
             upisi_termin(usluga, datum, vreme, ime_prezime, telefon)
-            st.success(f"Uspešno ste zakazali: {usluga} ({CENE[usluga]} din) za {datum} u {vreme}.")
+            st.success(f"Zakazano: {usluga} za {datum} u {vreme}.")
         else:
             st.error("Molim te, popuni ime i telefon.")
 
@@ -43,8 +52,19 @@ st.sidebar.title("Admin")
 lozinka = st.sidebar.text_input("Lozinka:", type="password")
 
 if lozinka == "1234":
-    st.subheader("Pregled zakazanih termina")
     conn = sqlite3.connect('termini.db')
     df = pd.read_sql_query("SELECT * FROM rezervacije", conn)
+    
+    st.subheader("Pregled termina")
     st.table(df)
+    
+    # Kalkulacija prometa
+    st.subheader("Finansijski pregled")
+    danas = str(date.today())
+    promet_danas = df[df['datum'] == danas]['cena'].sum()
+    ukupan_promet = df['cena'].sum()
+    
+    st.metric("Promet danas", f"{promet_danas} din")
+    st.metric("Ukupan promet", f"{ukupan_promet} din")
+    
     conn.close()
