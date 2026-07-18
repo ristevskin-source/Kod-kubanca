@@ -13,7 +13,7 @@ CENE = {
 }
 
 # --- FUNKCIJE ---
-def ucitaj_termine():. 
+def ucitaj_termine():
     conn = st.connection("gsheets", type=GSheetsConnection)
     df = conn.read(spreadsheet=URL_TABELE, usecols=[0, 1, 2])
     return df
