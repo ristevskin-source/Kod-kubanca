@@ -11,7 +11,7 @@ CENE = {"Šišanje": 2000, "Brada": 700, "Pranje kose": 400}
 def init_db():
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
-    # OVO VIŠE NE BRIŠEMO DA BI SE ČUVALI PODACI
+    # CREATE TABLE IF NOT EXISTS čuva postojeće podatke
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                   usluga TEXT, datum TEXT, vreme TEXT, 
@@ -28,12 +28,11 @@ def upisi_termin(usluga, datum, vreme, ime, telefon):
     conn.commit()
     conn.close()
 
-def dohvati_zauzete_termine(datum):
+def dohvati_sve_termine():
     conn = sqlite3.connect('termini.db')
-    query = "SELECT vreme FROM rezervacije WHERE datum = ?"
-    df = pd.read_sql_query(query, conn, params=(str(datum),))
+    df = pd.read_sql_query("SELECT * FROM rezervacije", conn)
     conn.close()
-    return df['vreme'].tolist()
+    return df
 
 init_db()
 
@@ -44,35 +43,32 @@ st.image("IMG_20260718_151846.jpg", width=300)
 with st.form("zakazivanje", clear_on_submit=True):
     usluga = st.selectbox("Usluga", list(CENE.keys()))
     datum = st.date_input("Datum")
-    
-    # Filtriranje termina
-    zauzeti = dohvati_zauzete_termine(datum)
-    slobodni = [t for t in SVI_TERMINI if t not in zauzeti]
-    
-    vreme = st.selectbox("Izaberi vreme", slobodni if slobodni else ["Nema slobodnih termina"])
+    vreme = st.selectbox("Izaberi vreme", SVI_TERMINI)
     ime_prezime = st.text_input("Ime i prezime")
     telefon = st.text_input("Telefon")
     
     if st.form_submit_button("Zakaži"):
-        if ime_prezime and telefon and vreme != "Nema slobodnih termina":
+        if ime_prezime and telefon:
             upisi_termin(usluga, datum, vreme, ime_prezime, telefon)
-            st.success(f"Zakazano: {usluga} za {datum} u {vreme}.")
-            st.rerun() # Osvežava stranicu da se odmah vidi promena
+            # POTVRDA KLIJENTU
+            st.success(f"Uspešno zakazano: {usluga} za {datum} u {vreme}. Hvala!")
         else:
-            st.error("Proveri podatke ili izaberi drugi termin.")
+            st.error("Molim te, popuni ime i telefon.")
 
 # --- ADMIN DEO ---
 st.sidebar.title("Admin")
 lozinka = st.sidebar.text_input("Lozinka:", type="password")
 
 if lozinka == "1234":
-    conn = sqlite3.connect('termini.db')
-    df = pd.read_sql_query("SELECT * FROM rezervacije", conn)
-    st.subheader("Pregled svih termina")
+    df = dohvati_sve_termine()
+    st.subheader("Pregled svih zakazanih termina")
     st.table(df)
     
+    # ZBIRNI PROMET
     st.subheader("Finansijski pregled")
     danas = str(date.today())
     promet_danas = df[df['datum'] == danas]['cena'].sum()
+    ukupan_promet = df['cena'].sum()
+    
     st.metric("Promet danas", f"{promet_danas} din")
-    conn.close()
+    st.metric("Ukupan promet", f"{ukupan_promet} din")
