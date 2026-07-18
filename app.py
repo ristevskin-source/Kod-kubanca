@@ -19,7 +19,7 @@ def sacuvaj_termine(termini):
     st.write("Podaci bi ovde bili sačuvani.")
 
 # --- APLIKACIJA ---
-st.image("https://raw.githubusercontent.com/ristevskin-source/Kod-kubanca/main/PreviewActivity.jpg", width=300)
+st.image("https://raw.githubusercontent.com/ristevskin-source/Kod-kubanca/main/IMG 20260718_151846.jpg", width=300)
 st.title("Kod Kubanca")
 
 # --- JAVNI DEO ---
