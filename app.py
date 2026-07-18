@@ -32,7 +32,7 @@ with st.form("zakazivanje", clear_on_submit=True):
     zauzeti = []
     
     for t in termini:
-        if t['Datum'] == str(datum):
+        if t.get('Datum') == str(datum):
             if t.get('Usluga') == "BLOKIRANO" and 'Od' in t and 'Do' in t:
                 start = svi_termini_dan.index(t['Od'])
                 end = svi_termini_dan.index(t['Do'])
