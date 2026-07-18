@@ -8,7 +8,7 @@ CENE = {"Šišanje": 2000, "Brada": 700, "Pranje kose": 400}
 
 # --- BAZA PODATAKA ---
 def init_db():
-    conn = sqlite3.connect('termini.db')
+    conn = sqlite3.connect
     c = conn.cursor()
     # Dodata kolona 'cena'
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
