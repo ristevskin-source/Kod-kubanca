@@ -19,7 +19,7 @@ def init_db():
     conn.close()
 
 def upisi_termin(usluga, datum, vreme, ime, telefon, cena=0):
-    conn = sqlite3. 
+    conn = sqlite3.connect('termini.db')
     c = conn.cursor()
     c.execute("INSERT INTO rezervacije (usluga, datum, vreme, ime, telefon, cena) VALUES (?,?,?,?,?,?)",
               (usluga, str(datum), vreme, ime, telefon, cena))
@@ -30,19 +30,19 @@ init_db()
 
 # --- APLIKACIJA ---
 st.title("Kod Kubanca")
-st.image("IMG_20260718_151846.jpg", width=300)
+# st.image("IMG_20260718_151846.jpg", width=300) # Aktiviraj ako je fajl tu
 
 with st.form("zakazivanje", clear_on_submit=True):
     usluga = st.selectbox("Usluga", list(CENE.keys()))
     datum = st.date_input("Datum")
     
-    # Učitavanje zauzetih termina
+    # Učitavanje svih zauzetih ili blokiranih termina
     conn = sqlite3.connect('termini.db')
     zauzeti_df = pd.read_sql_query("SELECT vreme FROM rezervacije WHERE datum = ?", conn, params=(str(datum),))
     conn.close()
     zauzeti_termini = zauzeti_df['vreme'].tolist()
     
-    # Filtriranje slobodnih
+    # Prikazujemo samo slobodne
     slobodni = [t for t in SVI_TERMINI if t not in zauzeti_termini]
     
     if slobodni:
@@ -65,22 +65,22 @@ st.sidebar.title("Admin")
 lozinka = st.sidebar.text_input("Lozinka:", type="password")
 
 if lozinka == "1234":
-    # Pregled i brisanje
     conn = sqlite3.connect('termini.db')
     df = pd.read_sql_query("SELECT * FROM rezervacije", conn)
     conn.close()
     
     st.subheader("Upravljanje terminima")
+    # Ovde Admin direktno menja tabelu
     edited_df = st.data_editor(df, num_rows="dynamic")
     
-    if st.button("Sačuvaj izmene (Brisanje)"):
+    if st.button("Sačuvaj izmene"):
         conn = sqlite3.connect('termini.db')
+        # Potpuno prepisivanje baze na osnovu onoga što je ostalo u editoru
         edited_df.to_sql('rezervacije', conn, if_exists='replace', index=False)
         conn.close()
         st.success("Izmene sačuvane!")
         st.rerun()
 
-    # Dodavanje pauze
     st.subheader("Dodaj pauzu")
     p_datum = st.date_input("Datum pauze")
     p_vreme = st.selectbox("Vreme pauze", SVI_TERMINI)
