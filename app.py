@@ -8,7 +8,7 @@ DOSTUPNI_TERMINI = [f"{sat:02d}:00" for sat in range(9, 21)]
 
 # --- BAZA PODATAKA ---
 def init_db():
-    conn = sqlite3.connect('termini.db')
+    conn = sqlite3.connect
     c = conn.cursor()
     # Tabela čuva podatke o rezervacijama
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
