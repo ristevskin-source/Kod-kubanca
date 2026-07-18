@@ -19,7 +19,7 @@ def sacuvaj_termine(termini):
     st.write("Podaci bi ovde bili sačuvani.")
 
 # --- APLIKACIJA ---
-# st.image("_20260716_172456_com_viber_voip_MediaPreviewActivity.jpg", width=300)
+st.image("_20260716_172456_com_viber_voip_MediaPreviewActivity.jpg", width=300)
 st.title("Kod Kubanca")
 
 # --- JAVNI DEO ---
