@@ -3,31 +3,35 @@ import pandas as pd
 
 # --- KONFIGURACIJA ---
 ADMIN_LOZINKA = "1234"
+CENE = {
+    "Šišanje": "2000 din",
+    "Brada": "700 din",
+    "Pranje kose": "500 din"
+}
 
-# --- FUNKCIJE (privremeno prazne) ---
+# --- FUNKCIJE ---
 def ucitaj_termine():
     # Ovde ćemo kasnije dodati čitanje iz Google tabele
     return []
 
 def sacuvaj_termine(termini):
     # Ovde ćemo kasnije dodati čuvanje u Google tabelu
-    st.write("Podaci bi ovde bili sačuvani (funkcija trenutno neaktivna)")
+    st.write("Podaci bi ovde bili sačuvani.")
 
 # --- APLIKACIJA ---
-st.image("Screenshot_20260717_011214.jpg", width=300) # Proveri da li ovaj fajl postoji u folderu
+st.image("_20260716_172456_com_viber_voip_MediaPreviewActivity.jpg", width=300)
 st.title("Kod Kubanca")
 
 # --- JAVNI DEO ---
 svi_termini_dan = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"]
 
 with st.form("zakazivanje", clear_on_submit=True):
-    usluga = st.selectbox("Usluga", ["Šišanje", "Brada"])
+    usluga = st.selectbox("Usluga", list(CENE.keys()))
     datum = st.date_input("Datum")
     
     termini = ucitaj_termine()
     zauzeti = []
     
-    # Logika za proveru zauzetosti (radiće kada napunimo listu 'termini')
     slobodni = [t for t in svi_termini_dan if t not in zauzeti]
     vreme = st.selectbox("Vreme", slobodni if slobodni else ["Nema slobodnih termina"])
     
@@ -36,9 +40,10 @@ with st.form("zakazivanje", clear_on_submit=True):
     
     if st.form_submit_button("Zakaži"):
         if slobodni and ime_prezime and telefon:
+            cena = CENE.get(usluga)
             termini.append({"Ime i prezime": ime_prezime, "Telefon": telefon, "Datum": str(datum), "Vreme": vreme, "Usluga": usluga})
             sacuvaj_termine(termini)
-            st.success("Uspešno zakazano!")
+            st.success(f"Uspešno ste zakazali {usluga}! Cena usluge je {cena}.")
         else:
             st.error("Molimo vas, popunite sva polja.")
 
