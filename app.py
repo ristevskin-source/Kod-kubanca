@@ -30,7 +30,7 @@ init_db()
 
 # --- APLIKACIJA ---
 st.title("Kod Kubanca")
-# st.image("IMG_20260718_151846.jpg", width=300) # Aktiviraj ako je fajl tu
+st.image("IMG_20260718_151846.jpg", width=300)
 
 with st.form("zakazivanje", clear_on_submit=True):
     usluga = st.selectbox("Usluga", list(CENE.keys()))
