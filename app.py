@@ -3,20 +3,20 @@ import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 
 # Povezivanje
-conn = st.connection("gsheets", type=GSheetsConnection)
+conn = st.connection("gsheets",type=GSheetsConnection)
 url = "https://docs.google.com/spreadsheets/d/1_hWwzOOhupyrv1t2FWRh-7gHpIh7JQpyVDVqLUut6bE/edit?usp=drivesdk"
 
 # --- KONFIGURACIJA ---
-FAJL_TERMINA = os.path.join(os.getcwd(), "termini.json")
+
 ADMIN_LOZINKA = "1234"
 
 # --- FUNKCIJE ---
-def ucitaj_termine():
-    # Čita podatke iz Google tabele
-    df = conn.read(spreadsheet=url, usecols=[0, 1, 2, 3, 4])
-    # Pretvara tabelu u listu rečnika
-    return df.to_dict('records')
 
+def sacuvaj_termine(termini):
+    # Pretvara listu rečnika u DataFrame
+    df = pd.DataFrame(termini)
+    # Upisuje podatke u Google tabelu
+    conn.update(spreadsheet=url,data=df)
 # --- APLIKACIJA ---
 st.image("Screenshot_20260717_011214.jpg", width=300)
 st.title("Kod Kubanca")
