@@ -3,7 +3,7 @@ import json
 import os
 
 # --- KONFIGURACIJA ---
-FAJL_TERMINA = "termini.json"
+FAJL_TERMINA = os.path.join(os.getcwd(), "termini.json")
 ADMIN_LOZINKA = "1234"
 
 # --- FUNKCIJE ---
@@ -75,3 +75,4 @@ if lozinka == ADMIN_LOZINKA:
             termini.append({"Ime": "PAUZA", "Datum": str(datum_pauze), "Od": od_vreme, "Do": do_vreme, "Usluga": "BLOKIRANO"})
             sacuvaj_termine(termini)
             st.rerun()
+
