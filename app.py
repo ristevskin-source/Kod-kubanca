@@ -2,12 +2,19 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
+# --- KONFIGURACIJA ---
+# Generisanje liste termina od 09:00 do 20:00
+DOSTUPNI_TERMINI = [f"{sat:02d}:00" for sat in range(9, 21)]
+
 # --- BAZA PODATAKA ---
 def init_db():
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
+    # Tabela čuva podatke o rezervacijama
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
-                 (id INTEGER PRIMARY KEY, usluga TEXT, datum TEXT, vreme TEXT, ime TEXT, telefon TEXT)''')
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  usluga TEXT, datum TEXT, vreme TEXT, 
+                  ime TEXT, telefon TEXT)''')
     conn.commit()
     conn.close()
 
@@ -28,7 +35,7 @@ st.title("Kod Kubanca")
 with st.form("zakazivanje", clear_on_submit=True):
     usluga = st.selectbox("Usluga", ["Šišanje", "Brada", "Pranje kose"])
     datum = st.date_input("Datum")
-    vreme = st.text_input("Vreme")
+    vreme = st.selectbox("Izaberi vreme", DOSTUPNI_TERMINI)
     ime_prezime = st.text_input("Ime i prezime")
     telefon = st.text_input("Telefon")
     
