@@ -19,7 +19,7 @@ def init_db():
     conn.close()
 
 def upisi_termin(usluga, datum, vreme, ime, telefon, cena=0):
-    conn = sqlite3.connect('termini.db')
+    conn = sqlite3. 
     c = conn.cursor()
     c.execute("INSERT INTO rezervacije (usluga, datum, vreme, ime, telefon, cena) VALUES (?,?,?,?,?,?)",
               (usluga, str(datum), vreme, ime, telefon, cena))
