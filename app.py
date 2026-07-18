@@ -3,27 +3,26 @@ import sqlite3
 import pandas as pd
 
 # --- KONFIGURACIJA ---
+# Generisanje liste termina od 09:00 do 20:00
 DOSTUPNI_TERMINI = [f"{sat:02d}:00" for sat in range(9, 21)]
-CENE = {"Šišanje": 2000, "Brada": 700, "Pranje kose": 400}
 
 # --- BAZA PODATAKA ---
 def init_db():
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
-    # Dodata kolona 'cena'
+    # Tabela čuva podatke o rezervacijama
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                   usluga TEXT, datum TEXT, vreme TEXT, 
-                  ime TEXT, telefon TEXT, cena INTEGER)''')
+                  ime TEXT, telefon TEXT)''')
     conn.commit()
     conn.close()
 
 def upisi_termin(usluga, datum, vreme, ime, telefon):
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
-    cena = CENE.get(usluga, 0)
-    c.execute("INSERT INTO rezervacije (usluga, datum, vreme, ime, telefon, cena) VALUES (?,?,?,?,?,?)",
-              (usluga, str(datum), vreme, ime, telefon, cena))
+    c.execute("INSERT INTO rezervacije (usluga, datum, vreme, ime, telefon) VALUES (?,?,?,?,?)",
+              (usluga, str(datum), vreme, ime, telefon))
     conn.commit()
     conn.close()
 
@@ -34,7 +33,7 @@ st.image("IMG_20260718_151846.jpg", width=300)
 st.title("Kod Kubanca")
 
 with st.form("zakazivanje", clear_on_submit=True):
-    usluga = st.selectbox("Usluga", list(CENE.keys()))
+    usluga = st.selectbox("Usluga", ["Šišanje", "Brada", "Pranje kose"])
     datum = st.date_input("Datum")
     vreme = st.selectbox("Izaberi vreme", DOSTUPNI_TERMINI)
     ime_prezime = st.text_input("Ime i prezime")
@@ -43,7 +42,7 @@ with st.form("zakazivanje", clear_on_submit=True):
     if st.form_submit_button("Zakaži"):
         if ime_prezime and telefon:
             upisi_termin(usluga, datum, vreme, ime_prezime, telefon)
-            st.success(f"Uspešno ste zakazali: {usluga} ({CENE[usluga]} din) za {datum} u {vreme}.")
+            st.success(f"Uspešno ste zakazali: {usluga} za {datum} u {vreme}. Vidimo se!")
         else:
             st.error("Molim te, popuni ime i telefon.")
 
