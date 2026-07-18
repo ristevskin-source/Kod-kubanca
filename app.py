@@ -14,6 +14,7 @@ def ucitaj_termine():
     return df
 
 # --- APLIKACIJA ---
+st.image("IMG_20260718_151846.jpg", width=300)
 st.title("Kod Kubanca")
 
 # --- JAVNI DEO ---
