@@ -1,28 +1,25 @@
 import streamlit as st
 import pandas as pd
-from streamlit_gsheets import GSheetsConnection
-
-# Povezivanje
-conn = st.connection("gsheets",type=GSheetsConnection)
-url = "https://docs.google.com/spreadsheets/d/1_hWwzOOhupyrv1t2FWRh-7gHpIh7JQpyVDVqLUut6bE/edit?usp=drivesdk"
 
 # --- KONFIGURACIJA ---
-
 ADMIN_LOZINKA = "1234"
 
-# --- FUNKCIJE ---
+# --- FUNKCIJE (privremeno prazne) ---
+def ucitaj_termine():
+    # Ovde ćemo kasnije dodati čitanje iz Google tabele
+    return []
 
 def sacuvaj_termine(termini):
-    # Pretvara listu rečnika u DataFrame
-    df = pd.DataFrame(termini)
-    # Upisuje podatke u Google tabelu
-    conn.update(spreadsheet=url,data=df)
+    # Ovde ćemo kasnije dodati čuvanje u Google tabelu
+    st.write("Podaci bi ovde bili sačuvani (funkcija trenutno neaktivna)")
+
 # --- APLIKACIJA ---
-st.image("Screenshot_20260717_011214.jpg", width=300)
+# st.image("Screenshot_20260717_011214.jpg", width=300) # Proveri da li ovaj fajl postoji u folderu
 st.title("Kod Kubanca")
 
 # --- JAVNI DEO ---
 svi_termini_dan = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"]
+
 with st.form("zakazivanje", clear_on_submit=True):
     usluga = st.selectbox("Usluga", ["Šišanje", "Brada"])
     datum = st.date_input("Datum")
@@ -30,15 +27,7 @@ with st.form("zakazivanje", clear_on_submit=True):
     termini = ucitaj_termine()
     zauzeti = []
     
-    for t in termini:
-        if t.get('Datum') == str(datum):
-            if t.get('Usluga') == "BLOKIRANO" and 'Od' in t and 'Do' in t:
-                start = svi_termini_dan.index(t['Od'])
-                end = svi_termini_dan.index(t['Do'])
-                zauzeti.extend(svi_termini_dan[start:end+1])
-            elif 'Vreme' in t:
-                zauzeti.append(t['Vreme'])
-    
+    # Logika za proveru zauzetosti (radiće kada napunimo listu 'termini')
     slobodni = [t for t in svi_termini_dan if t not in zauzeti]
     vreme = st.selectbox("Vreme", slobodni if slobodni else ["Nema slobodnih termina"])
     
@@ -50,7 +39,6 @@ with st.form("zakazivanje", clear_on_submit=True):
             termini.append({"Ime i prezime": ime_prezime, "Telefon": telefon, "Datum": str(datum), "Vreme": vreme, "Usluga": usluga})
             sacuvaj_termine(termini)
             st.success("Uspešno zakazano!")
-            st.rerun()
         else:
             st.error("Molimo vas, popunite sva polja.")
 
@@ -72,4 +60,3 @@ if lozinka == ADMIN_LOZINKA:
             termini = ucitaj_termine()
             termini.append({"Ime": "PAUZA", "Datum": str(datum_pauze), "Od": od_vreme, "Do": do_vreme, "Usluga": "BLOKIRANO"})
             sacuvaj_termine(termini)
-            st.rerun()
