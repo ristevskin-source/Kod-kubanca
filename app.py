@@ -24,6 +24,16 @@ def init_db():
     c.execute("SELECT * FROM konfiguracija")
     if not c.fetchone():
         c.execute("INSERT INTO konfiguracija (lozinka) VALUES ('1234')")
+
+    # 2. Automatsko popunjavanje ako je tabela rezervacije prazna
+    c.execute("SELECT count(*) FROM rezervacije")
+    if c.fetchone()[0] == 0:
+        termini = [
+            (None, '2026-07-20', '09:00', None, None),
+            (None, '2026-07-20', '10:00', None, None),
+            (None, '2026-07-20', '11:00', None, None)
+        ]
+        c.executemany("INSERT INTO rezervacije (usluga, datum, vreme, ime, telefon) VALUES (?, ?, ?, ?, ?)", termini)
         
     conn.commit()
     conn.close()
@@ -104,4 +114,4 @@ if datumi:
         else:
             st.warning("Nema slobodnih termina za izabrani datum.")
 else:
-    st.error("Baza je prazna. Molim vas, inicijalizujte termine.")
+    st.error("Baza je prazna.")
