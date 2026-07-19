@@ -1,13 +1,18 @@
 import streamlit as st
 import sqlite3
 
-# --- Inicijalizacija ---
+# --- 1. Inicijalizacija ---
 def init_db():
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
                  (id INTEGER PRIMARY KEY, usluga TEXT, datum TEXT, vreme TEXT, 
                   ime TEXT, telefon TEXT)''')
+    # Popunjavanje termina ako su prazni
+    c.execute("SELECT count(*) FROM rezervacije")
+    if c.fetchone()[0] == 0:
+        for sat in ["09:00", "10:00", "11:00", "12:00"]:
+            c.execute("INSERT INTO rezervacije (datum, vreme) VALUES (?, ?)", ('2026-07-20', sat))
     c.execute('''CREATE TABLE IF NOT EXISTS konfiguracija (lozinka TEXT)''')
     c.execute("SELECT * FROM konfiguracija")
     if not c.fetchone():
@@ -17,12 +22,11 @@ def init_db():
 
 init_db()
 
-# --- Prikaz Logo-a ---
+# --- 2. Prikaz ---
 st.image("IMG_20260718_151846.jpg", width=300)
-
 st.title("Zakazivanje termina")
 
-# --- Admin Panel (Kontrolni centar) ---
+# Admin panel
 with st.expander("🔑 Admin pristup"):
     if "admin_ulogovan" not in st.session_state: st.session_state.admin_ulogovan = False
     
@@ -37,7 +41,7 @@ with st.expander("🔑 Admin pristup"):
                 st.rerun()
             conn.close()
     else:
-        st.subheader("Upravljanje terminima")
+        st.subheader("Pregled i upravljanje terminima")
         conn = sqlite3.connect('termini.db')
         c = conn.cursor()
         c.execute("SELECT * FROM rezervacije")
@@ -45,13 +49,14 @@ with st.expander("🔑 Admin pristup"):
         
         for t in termini:
             col1, col2 = st.columns([3, 1])
-            info = f"{t[2]} | {t[3]} - {t[4] if t[4] else 'SLOBODNO'}"
-            col1.write(info)
-            if col2.button("Oslobodi", key=f"del_{t[0]}"):
-                c.execute("UPDATE rezervacije SET ime=NULL, telefon=NULL, usluga=NULL WHERE id=?", (t[0],))
-                conn.commit()
-                st.rerun()
+            status = f"{t[2]} | {t[3]} - {t[4] if t[4] else 'SLOBODNO'}"
+            col1.write(status)
+            if t[4]: # Ako je zauzeto, prikaži dugme za oslobađanje
+                if col2.button("Oslobodi", key=f"del_{t[0]}"):
+                    c.execute("UPDATE rezervacije SET ime=NULL, telefon=NULL, usluga=NULL WHERE id=?", (t[0],))
+                    conn.commit()
+                    st.rerun()
         conn.close()
 
-# --- Forma za klijente ---
-# (Nastavi ovde sa logikom forme za zakazivanje koju smo ranije definisali)
+# --- 3. Forma za klijente ---
+# (Ovde ide logika za zakazivanje koju smo ranije definisali)
