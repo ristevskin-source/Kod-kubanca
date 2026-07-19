@@ -24,7 +24,12 @@ def init_db():
 init_db()
 
 st.title("Zakazivanje termina")
-st.image("IMG_20260718_151846.jpg", width=300)
+
+# Logo na sredini
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st.image("IMG_20260718_151846.jpg", width=300)
+
 with st.expander("🔑 Admin pristup"):
     if "admin_ulogovan" not in st.session_state: st.session_state.admin_ulogovan = False
     if not st.session_state.admin_ulogovan:
@@ -38,7 +43,6 @@ with st.expander("🔑 Admin pristup"):
                 st.rerun()
             conn.close()
     else:
-        # Dugme za čišćenje baze
         if st.button("🚨 Očisti sve termine", key="reset_db"):
             conn = sqlite3.connect('termini.db')
             c = conn.cursor()
@@ -53,15 +57,15 @@ with st.expander("🔑 Admin pristup"):
         c = conn.cursor()
         c.execute("SELECT * FROM rezervacije WHERE ime IS NOT NULL")
         for t in c.fetchall():
+            # Ažuriran prikaz: dodata usluga (t[1]) na početak
             col1, col2 = st.columns([3, 1])
-            col1.write(f"{t[2]} {t[3]} - {t[4]} ({t[5]})")
+            col1.write(f"**{t[1]}** | {t[2]} {t[3]} - {t[4]} ({t[5]})")
             if col2.button("Oslobodi", key=f"del_{t[0]}"):
                 c.execute("UPDATE rezervacije SET ime=NULL, telefon=NULL, usluga=NULL WHERE id=?", (t[0],))
                 conn.commit()
                 st.rerun()
         conn.close()
 
-# Forma za klijente
 st.subheader("Rezervacija")
 conn = sqlite3.connect('termini.db')
 c = conn.cursor()
@@ -90,7 +94,9 @@ with st.form("klijent_forma"):
             c.execute("UPDATE rezervacije SET ime=?, telefon=?, usluga=? WHERE id=?", (ime, tel, usluga, mapa[termin]))
             conn.commit()
             conn.close()
-            st.success("Zakazano!")
-            st.rerun()
+            # Prikaz potvrde klijentu
+            st.success(f"Uspešno ste zakazali: {usluga}, dana {datum} u {termin}.")
+            if st.button("Nova rezervacija"):
+                st.rerun()
     else:
         st.warning("Nema slobodnih termina.")
