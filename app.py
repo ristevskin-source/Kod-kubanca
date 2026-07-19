@@ -11,6 +11,14 @@ def init_db():
                   ime TEXT, telefon TEXT)''')
     
     # Provera i dodavanje kolone 'cena' ako ne postoji
+    # Provera baze
+    conn = sqlite3.connect('termini.db')
+    c = conn.cursor()
+    c.execute("SELECT count(*) FROM rezervacije WHERE ime IS NULL")
+    broj_slobodnih = c.fetchone()[0]
+    st.write(f"Trenutno slobodnih termina u bazi: {broj_slobodnih}")
+    conn.close()
+
     c.execute("PRAGMA table_info(rezervacije)")
     kolone = [info[1] for info in c.fetchall()]
     if 'cena' not in kolone:
