@@ -79,7 +79,7 @@ with st.form("klijent_forma"):
     usluga = st.selectbox("Usluga *", ["Šišanje", "Brijanje", "Stilizovanje"])
     datum = st.selectbox("Datum *", svi_datumi)
     
-    # Provera slobodnih termina (gde su ime i telefon NULL)
+    # Provera slobodnih termina: tražimo one gde je 'ime' prazno
     c.execute("SELECT id, vreme FROM rezervacije WHERE datum=? AND ime IS NULL", (datum,))
     slobodni_termini = c.fetchall()
     
@@ -99,6 +99,5 @@ with st.form("klijent_forma"):
                 st.error("Molimo popunite sva obavezna polja.")
     else:
         st.warning("Za izabrani dan nema slobodnih termina. Molimo izaberite neki drugi dan.")
-        # Onemogućavamo dugme ako nema termina
         st.form_submit_button("Zakaži", disabled=True)
 conn.close()
