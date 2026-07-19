@@ -13,7 +13,7 @@ def init_db():
     c.execute("SELECT count(*) FROM rezervacije")
     if c.fetchone()[0] == 0:
         dani = ['2026-07-20', '2026-07-21']
-        sati = ["09:00", "10:00", "11:00", "12:00"]
+        sati = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
         for d in dani:
             for s in sati:
                 c.execute("INSERT INTO rezervacije (datum, vreme) VALUES (?, ?)", (d, s))
@@ -28,10 +28,9 @@ def init_db():
 init_db()
 
 # --- 2. Zaglavlje ---
-st.image("IMG_20260718_151846.jpg", width=300)
 st.title("Zakazivanje termina")
 
-# --- 3. Admin Panel (Skriven) ---
+# --- 3. Admin Panel ---
 with st.expander("🔑 Admin pristup"):
     if "admin_ulogovan" not in st.session_state: st.session_state.admin_ulogovan = False
     
@@ -46,26 +45,19 @@ with st.expander("🔑 Admin pristup"):
                 st.rerun()
             conn.close()
     else:
-        nova_lozinka = st.text_input("Promeni lozinku:", type="password")
-        if st.button("Sačuvaj lozinku"):
-            conn = sqlite3.connect('termini.db')
-            c = conn.cursor()
-            c.execute("UPDATE konfiguracija SET lozinka=?", (nova_lozinka,))
-            conn.commit()
-            conn.close()
-            st.success("Lozinka promenjena!")
-
         st.subheader("Pregled zakazanih termina")
         conn = sqlite3.connect('termini.db')
         c = conn.cursor()
-        c.execute("SELECT * FROM rezervacije")
-        for t in c.fetchall():
-            info = f"{t[2]} {t[3]} - {t[4] if t[4] else 'SLOBODAN'}"
-            if t[4]: info += f" (Klijent: {t[4]}, Tel: {t[5]}, Usluga: {t[1]})"
-            
-            col1, col2 = st.columns([3, 1])
-            col1.write(info)
-            if t[4]: # Ako je zauzeto, prikaži dugme za oslobađanje
+        c.execute("SELECT * FROM rezervacije WHERE ime IS NOT NULL")
+        zakazani = c.fetchall()
+        
+        if not zakazani:
+            st.write("Nema zakazanih termina.")
+        else:
+            for t in zakazani:
+                info = f"{t[2]} u {t[3]} - {t[4]} ({t[5]}) - Usluga: {t[1]}"
+                col1, col2 = st.columns([3, 1])
+                col1.write(info)
                 if col2.button("Oslobodi", key=f"del_{t[0]}"):
                     c.execute("UPDATE rezervacije SET ime=NULL, telefon=NULL, usluga=NULL WHERE id=?", (t[0],))
                     conn.commit()
@@ -77,34 +69,36 @@ st.subheader("Rezervacija")
 conn = sqlite3.connect('termini.db')
 c = conn.cursor()
 
-# Uzimamo listu datuma
+# Uzimamo listu svih datuma
 c.execute("SELECT DISTINCT datum FROM rezervacije")
 svi_datumi = [row[0] for row in c.fetchall()]
 
 with st.form("klijent_forma"):
-    ime = st.text_input("Ime i prezime")
-    telefon = st.text_input("Telefon")
-    usluga = st.selectbox("Usluga", ["Šišanje", "Brijanje", "Stilizovanje"])
+    ime = st.text_input("Ime i prezime *")
+    telefon = st.text_input("Telefon *")
+    usluga = st.selectbox("Usluga *", ["Šišanje", "Brijanje", "Stilizovanje"])
+    datum = st.selectbox("Datum *", svi_datumi)
     
-    datum = st.selectbox("Datum", svi_datumi)
-    
-    # Filtriramo samo slobodne termine za izabrani datum
+    # Provera slobodnih termina (gde su ime i telefon NULL)
     c.execute("SELECT id, vreme FROM rezervacije WHERE datum=? AND ime IS NULL", (datum,))
     slobodni_termini = c.fetchall()
     
     if slobodni_termini:
         termin_map = {t[1]: t[0] for t in slobodni_termini}
-        izabrani_termin = st.selectbox("Slobodan termin", list(termin_map.keys()))
+        izabrani_termin = st.selectbox("Slobodan termin *", list(termin_map.keys()))
         
         if st.form_submit_button("Zakaži"):
-            if ime and telefon:
+            if ime.strip() and telefon.strip():
                 termin_id = termin_map[izabrani_termin]
-                c.execute("UPDATE rezervacije SET ime=?, telefon=?, usluga=? WHERE id=?", (ime, telefon, usluga, termin_id))
+                c.execute("UPDATE rezervacije SET ime=?, telefon=?, usluga=? WHERE id=?", 
+                          (ime, telefon, usluga, termin_id))
                 conn.commit()
-                st.success(f"Uspešno ste zakazali {usluga} za {datum} u {izabrani_termin}. Vidimo se!")
+                st.success(f"Uspešno ste zakazali {usluga} za {datum} u {izabrani_termin}.")
                 st.rerun()
             else:
-                st.error("Molimo unesite ime i telefon.")
+                st.error("Molimo popunite sva obavezna polja.")
     else:
-        st.warning(f"Za {datum} nema slobodnih termina.")
+        st.warning("Za izabrani dan nema slobodnih termina. Molimo izaberite neki drugi dan.")
+        # Onemogućavamo dugme ako nema termina
+        st.form_submit_button("Zakaži", disabled=True)
 conn.close()
