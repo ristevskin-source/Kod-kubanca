@@ -18,9 +18,10 @@ def init_db():
     conn.commit()
     conn.close()
 
-def upisi_termin(usluga, datum, vreme, ime, telefon, cena=0):
+def upisi_termin(usluga, datum, vreme, ime, telefon, cena):
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
+    # Ovde eksplicitno upisujemo vrednosti koje dobijamo iz forme
     c.execute("INSERT INTO rezervacije (usluga, datum, vreme, ime, telefon, cena) VALUES (?,?,?,?,?,?)",
               (usluga, str(datum), vreme, ime, telefon, cena))
     conn.commit()
@@ -30,35 +31,33 @@ init_db()
 
 # --- APLIKACIJA ---
 st.title("Kod Kubanca")
-st.image("IMG_20260718_151846.jpg", width=300)
 
-with st.form("zakazivanje", clear_on_submit=True):
+with st.form("forma_zakazivanje", clear_on_submit=True):
     usluga = st.selectbox("Usluga", list(CENE.keys()))
     datum = st.date_input("Datum")
     
-    # Učitavanje svih zauzetih ili blokiranih termina
+    # Filtriranje termina
     conn = sqlite3.connect('termini.db')
     zauzeti_df = pd.read_sql_query("SELECT vreme FROM rezervacije WHERE datum = ?", conn, params=(str(datum),))
     conn.close()
-    zauzeti_termini = zauzeti_df['vreme'].tolist()
+    zauzeti = zauzeti_df['vreme'].tolist()
+    slobodni = [t for t in SVI_TERMINI if t not in zauzeti]
     
-    # Prikazujemo samo slobodne
-    slobodni = [t for t in SVI_TERMINI if t not in zauzeti_termini]
+    vreme = st.selectbox("Izaberi vreme", slobodni if slobodni else ["Nema termina"])
     
-    if slobodni:
-        vreme = st.selectbox("Izaberi vreme", slobodni)
-        ime_prezime = st.text_input("Ime i prezime")
-        telefon = st.text_input("Telefon")
-        
-        if st.form_submit_button("Zakaži"):
-            if ime_prezime and telefon:
-                upisi_termin(usluga, datum, vreme, ime_prezime, telefon, CENE[usluga])
-                st.success(f"Uspešno zakazano: {usluga} za {datum} u {vreme}.")
-                st.rerun()
-            else:
-                st.error("Molim te, popuni ime i telefon.")
-    else:
-        st.warning("Nema slobodnih termina za izabrani datum.")
+    # Korišćenje ključeva (keys) osigurava da Streamlit pravilno povezuje polja
+    ime_klijenta = st.text_input("Ime i prezime", key="ime_input")
+    telefon_klijenta = st.text_input("Telefon", key="tel_input")
+    
+    submit = st.form_submit_button("Zakaži")
+
+    if submit:
+        if ime_klijenta and telefon_klijenta and slobodni:
+            upisi_termin(usluga, datum, vreme, ime_klijenta, telefon_klijenta, CENE[usluga])
+            st.success(f"Uspešno zakazano: {usluga}, {datum} u {vreme}. Hvala, {ime_klijenta}!")
+            st.rerun() 
+        else:
+            st.error("Molim te, popuni sva polja ispravno.")
 
 # --- ADMIN DEO ---
 st.sidebar.title("Admin")
@@ -69,22 +68,12 @@ if lozinka == "1234":
     df = pd.read_sql_query("SELECT * FROM rezervacije", conn)
     conn.close()
     
-    st.subheader("Upravljanje terminima")
-    # Ovde Admin direktno menja tabelu
+    st.subheader("Pregled i brisanje")
     edited_df = st.data_editor(df, num_rows="dynamic")
     
-    if st.button("Sačuvaj izmene"):
+    if st.button("Sačuvaj promene"):
         conn = sqlite3.connect('termini.db')
-        # Potpuno prepisivanje baze na osnovu onoga što je ostalo u editoru
         edited_df.to_sql('rezervacije', conn, if_exists='replace', index=False)
         conn.close()
-        st.success("Izmene sačuvane!")
-        st.rerun()
-
-    st.subheader("Dodaj pauzu")
-    p_datum = st.date_input("Datum pauze")
-    p_vreme = st.selectbox("Vreme pauze", SVI_TERMINI)
-    if st.button("Blokiraj termin"):
-        upisi_termin("PAUZA", p_datum, p_vreme, "PAUZA", "-", 0)
-        st.success("Termin blokiran.")
+        st.success("Tabela ažurirana!")
         st.rerun()
