@@ -24,7 +24,7 @@ def init_db():
 init_db()
 
 st.title("Zakazivanje termina")
-
+st.image("IMG_20260718_151846.jpg", width=300)
 with st.expander("🔑 Admin pristup"):
     if "admin_ulogovan" not in st.session_state: st.session_state.admin_ulogovan = False
     if not st.session_state.admin_ulogovan:
