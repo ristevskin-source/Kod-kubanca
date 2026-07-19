@@ -9,7 +9,6 @@ import sqlite3
 st.image("IMG_20260718_151846.jpg", width=300)
 
 # --- 3. Naslov i ostatak aplikacije ---
-st.title("Zakazivanje termina")
 # (Nastavi sa ostatkom koda...)
 def init_db():
     conn = sqlite3.connect('termini.db')
