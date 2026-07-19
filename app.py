@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime, timedelta
 
 # ---------- KONFIGURACIJA ----------
-RADNO_VREME = [(9,0), (17,0)]  # od 09:00 do 17:00
+RADNO_VREME = [(9,0), (20,0)]  # od 09:00 do 17:00
 INTERVAL_MIN = 60              # na svakih sat vremena
 BROJ_DANA = 7                  # prikazujemo 7 dana
 
