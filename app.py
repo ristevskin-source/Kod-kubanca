@@ -1,13 +1,13 @@
 import streamlit as st
 import sqlite3
 
-# --- 1. Inicijalizacija baze ---
+# --- 1. Inicijalizacija ---
 def init_db():
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
                  (id INTEGER PRIMARY KEY, usluga TEXT, datum TEXT, vreme TEXT, 
-                  ime TEXT, telefon TEXT, cena INTEGER)''')
+                  ime TEXT, telefon TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS konfiguracija (lozinka TEXT)''')
     c.execute("SELECT * FROM konfiguracija")
     if not c.fetchone():
@@ -17,67 +17,75 @@ def init_db():
 
 init_db()
 
-# --- 2. Inicijalizacija stanja ---
-if "admin_ulogovan" not in st.session_state:
-    st.session_state.admin_ulogovan = False
-if "zakazano" not in st.session_state:
-    st.session_state.zakazano = False
+if "admin_ulogovan" not in st.session_state: st.session_state.admin_ulogovan = False
+if "zakazano" not in st.session_state: st.session_state.zakazano = False
 
-# --- 3. Funkcije ---
-def proveri_lozinku(unesena):
+# --- 2. Pomoćne funkcije ---
+def get_slobodni_termini(datum):
+    svi = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00"]
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
-    c.execute("SELECT lozinka FROM konfiguracija")
-    prava = c.fetchone()[0]
+    c.execute("SELECT vreme FROM rezervacije WHERE datum = ?", (datum,))
+    zauzeti = [row[0] for row in c.fetchall()]
     conn.close()
-    return unesena == prava
+    return [t for t in svi if t not in zauzeti]
 
-# --- 4. Interfejs ---
+# --- 3. Interfejs ---
 st.title("Zakazivanje termina")
 
-# Admin panel logika
-if not st.session_state.admin_ulogovan:
-    with st.expander("🔑 Admin Prijava"):
-        lozinka_input = st.text_input("Unesi lozinku:", type="password")
+# Admin panel (skriveni expander)
+with st.expander("🔑 Admin pristup"):
+    if not st.session_state.admin_ulogovan:
+        lozinka_input = st.text_input("Lozinka:", type="password")
         if st.button("Prijavi se"):
-            if proveri_lozinku(lozinka_input):
+            conn = sqlite3.connect('termini.db')
+            c = conn.cursor()
+            c.execute("SELECT lozinka FROM konfiguracija")
+            if lozinka_input == c.fetchone()[0]:
                 st.session_state.admin_ulogovan = True
                 st.rerun()
             else:
                 st.error("Pogrešna lozinka!")
-else:
-    st.success("Admin ulogovan")
-    if st.button("Odjavi se"):
-        st.session_state.admin_ulogovan = False
-        st.rerun()
-    
-    with st.expander("⚙️ Sigurnosne postavke"):
-        stara = st.text_input("Stara lozinka", type="password")
-        nova = st.text_input("Nova lozinka", type="password")
-        if st.button("Sačuvaj novu lozinku"):
-            if proveri_lozinku(stara):
-                conn = sqlite3.connect('termini.db')
-                c = conn.cursor()
-                c.execute("UPDATE konfiguracija SET lozinka = ?", (nova,))
-                conn.commit()
-                conn.close()
-                st.success("Lozinka promenjena!")
-            else:
-                st.error("Stara lozinka nije tačna!")
+            conn.close()
+    else:
+        st.success("Admin ulogovan")
+        if st.button("Odjavi se"):
+            st.session_state.admin_ulogovan = False
+            st.rerun()
+        # Izmena lozinke
+        nova_lozinka = st.text_input("Nova lozinka:", type="password")
+        if st.button("Sačuvaj lozinku"):
+            conn = sqlite3.connect('termini.db')
+            c = conn.cursor()
+            c.execute("UPDATE konfiguracija SET lozinka = ?", (nova_lozinka,))
+            conn.commit()
+            conn.close()
+            st.success("Izmenjeno!")
 
 # Forma za klijente
 if not st.session_state.zakazano:
-    with st.form("zakazivanje", clear_on_submit=False):
+    with st.form("klijent_forma"):
         ime = st.text_input("Ime i prezime")
         telefon = st.text_input("Telefon")
-        submit = st.form_submit_button("Zakaži")
+        usluga = st.selectbox("Usluga", ["Šišanje", "Brijanje", "Stilizovanje"])
+        datum = st.date_input("Datum")
+        dostupni = get_slobodni_termini(str(datum))
+        termin = st.selectbox("Slobodan termin", dostupni)
         
-        if submit:
-            # Ovde dodaj svoju logiku za upis u bazu
-            st.session_state.zakazano = True
-            st.rerun()
+        if st.form_submit_button("Zakaži"):
+            if dostupni:
+                conn = sqlite3.connect('termini.db')
+                c = conn.cursor()
+                c.execute("INSERT INTO rezervacije (usluga, datum, vreme, ime, telefon) VALUES (?,?,?,?,?)",
+                          (usluga, str(datum), termin, ime, telefon))
+                conn.commit()
+                conn.close()
+                st.session_state.zakazano = True
+                st.rerun()
+            else:
+                st.warning("Nema slobodnih termina za ovaj datum.")
 else:
-    st.success("Uspešno zakazano! Hvala na poverenju.")
-    if st.button("Zakaži novi termin"):
+    st.success("Uspešno zakazano!")
+    if st.button("Novi termin"):
         st.session_state.zakazano = False
         st.rerun()
