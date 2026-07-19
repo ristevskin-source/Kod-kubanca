@@ -5,31 +5,21 @@ def init_db():
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
     
-    # Kreiranje tabele rezervacije ako ne postoji
+    # 1. Kreiranje tabela
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
                  (id INTEGER PRIMARY KEY, usluga TEXT, datum TEXT, vreme TEXT, 
                   ime TEXT, telefon TEXT)''')
     
-    # Provera i dodavanje kolone 'cena' ako ne postoji
-    # Provera baze
-    conn = sqlite3.connect('termini.db')
-    c = conn.cursor()
-    c.execute("SELECT count(*) FROM rezervacije WHERE ime IS NULL")
-    broj_slobodnih = c.fetchone()[0]
-    st.write(f"Trenutno slobodnih termina u bazi: {broj_slobodnih}")
-    conn.close()
-
+    # Dodavanje kolone cena ako ne postoji
     c.execute("PRAGMA table_info(rezervacije)")
     kolone = [info[1] for info in c.fetchall()]
     if 'cena' not in kolone:
         c.execute("ALTER TABLE rezervacije ADD COLUMN cena INTEGER")
     
-    # Kreiranje tabele cenovnik
     c.execute('''CREATE TABLE IF NOT EXISTS cenovnik (usluga TEXT PRIMARY KEY, cena INTEGER)''')
     cene = [('Šišanje', 2000), ('Brijanje', 700), ('Stilizovanje', 1000)]
     c.executemany("INSERT OR IGNORE INTO cenovnik VALUES (?, ?)", cene)
     
-    # Konfiguracija
     c.execute('''CREATE TABLE IF NOT EXISTS konfiguracija (lozinka TEXT)''')
     c.execute("SELECT * FROM konfiguracija")
     if not c.fetchone():
@@ -55,7 +45,8 @@ with st.expander("🔑 Admin pristup"):
             conn = sqlite3.connect('termini.db')
             c = conn.cursor()
             c.execute("SELECT lozinka FROM konfiguracija")
-            if lozinka_input == c.fetchone()[0]:
+            res = c.fetchone()
+            if res and lozinka_input == res[0]:
                 st.session_state.admin_ulogovan = True
                 st.rerun()
             conn.close()
@@ -70,6 +61,7 @@ with st.expander("🔑 Admin pristup"):
         if st.button("🚨 Očisti sve termine"):
             c.execute("UPDATE rezervacije SET ime=NULL, telefon=NULL, usluga=NULL, cena=NULL")
             conn.commit()
+            st.success("Termini očišćeni.")
             st.rerun()
         conn.close()
 
@@ -82,30 +74,34 @@ c.execute("SELECT usluga, cena FROM cenovnik")
 cenovnik_dict = dict(c.fetchall())
 conn.close()
 
-with st.form("klijent_forma"):
-    ime = st.text_input("Ime i prezime *")
-    tel = st.text_input("Telefon *")
-    usluga = st.selectbox("Usluga", list(cenovnik_dict.keys()))
-    datum = st.selectbox("Datum", datumi)
-    
-    conn = sqlite3.connect('termini.db')
-    c = conn.cursor()
-    c.execute("SELECT id, vreme FROM rezervacije WHERE datum=? AND ime IS NULL", (datum,))
-    slobodni = c.fetchall()
-    conn.close()
-    
-    if slobodni:
-        mapa = {t[1]: t[0] for t in slobodni}
-        termin = st.selectbox("Slobodan termin", list(mapa.keys()))
+if datumi:
+    with st.form("klijent_forma"):
+        ime = st.text_input("Ime i prezime *")
+        tel = st.text_input("Telefon *")
+        usluga = st.selectbox("Usluga", list(cenovnik_dict.keys()))
+        datum = st.selectbox("Datum", datumi)
         
-        if st.form_submit_button("Zakaži"):
-            cena = cenovnik_dict[usluga]
-            conn = sqlite3.connect('termini.db')
-            c = conn.cursor()
-            c.execute("UPDATE rezervacije SET ime=?, telefon=?, usluga=?, cena=? WHERE id=?", 
-                      (ime, tel, usluga, cena, mapa[termin]))
-            conn.commit()
-            conn.close()
-            st.success(f"Uspešno zakazano: {usluga} ({cena} din).")
-    else:
-        st.warning("Nema slobodnih termina.")
+        conn = sqlite3.connect('termini.db')
+        c = conn.cursor()
+        c.execute("SELECT id, vreme FROM rezervacije WHERE datum=? AND ime IS NULL", (datum,))
+        slobodni = c.fetchall()
+        conn.close()
+        
+        if slobodni:
+            mapa = {t[1]: t[0] for t in slobodni}
+            termin = st.selectbox("Slobodan termin", list(mapa.keys()))
+            
+            if st.form_submit_button("Zakaži"):
+                cena = cenovnik_dict[usluga]
+                conn = sqlite3.connect('termini.db')
+                c = conn.cursor()
+                c.execute("UPDATE rezervacije SET ime=?, telefon=?, usluga=?, cena=? WHERE id=?", 
+                          (ime, tel, usluga, cena, mapa[termin]))
+                conn.commit()
+                conn.close()
+                st.success(f"Uspešno zakazano: {usluga} ({cena} din).")
+                st.rerun()
+        else:
+            st.warning("Nema slobodnih termina za izabrani datum.")
+else:
+    st.error("Baza je prazna. Molim vas, inicijalizujte termine.")
