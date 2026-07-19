@@ -1,4 +1,4 @@
-import streamlit as st
+7import streamlit as st
 import sqlite3
 from datetime import datetime, timedelta
 
@@ -47,17 +47,31 @@ def generisi_datume():
         datumi.append(dan.strftime("%Y-%m-%d"))
     return datumi
 
-def generisi_termine_za_dan(datum_str):
-    """Kreira termine za dati dan (od RADNO_VREME do kraja) ako ne postoje"""
+
+    def generisi_termine_za_dan(datum_str):
+    """Kreira termine za dati dan (od RADNO_VREME do kraja)"""
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
     
-    # Proveri da li već postoje termini za taj dan
-    c.execute("SELECT count(*) FROM rezervacije WHERE datum=?", (datum_str,))
-    if c.fetchone()[0] > 0:
-        conn.close()
-        return  # već postoje
+    # ⚠️ BRIŠEM sve stare termine za ovaj dan pre nego što dodam nove (rešava problem)
+    c.execute("DELETE FROM rezervacije WHERE datum=?", (datum_str,))
     
+    # Generiši nove termine
+    sat_start, min_start = RADNO_VREME[0]
+    sat_kraj, min_kraj = RADNO_VREME[1]
+    trenutno = datetime.strptime(datum_str, "%Y-%m-%d").replace(hour=sat_start, minute=min_start)
+    kraj = datetime.strptime(datum_str, "%Y-%m-%d").replace(hour=sat_kraj, minute=min_kraj)
+    
+    termini = []
+    while trenutno < kraj:
+        vreme = trenutno.strftime("%H:%M")
+        termini.append((None, datum_str, vreme, None, None, None))
+        trenutno += timedelta(minutes=INTERVAL_MIN)
+    
+    if termini:
+        c.executemany("INSERT INTO rezervacije (usluga, datum, vreme, ime, telefon, cena) VALUES (?, ?, ?, ?, ?, ?)", termini)
+        conn.commit()
+    conn.close()
     # Generiši termine
     sat_start, min_start = RADNO_VREME[0]
     sat_kraj, min_kraj = RADNO_VREME[1]
