@@ -1,18 +1,21 @@
 import streamlit as st
 import sqlite3
 
-# --- 1. Inicijalizacija ---
+# --- 1. Inicijalizacija baze ---
 def init_db():
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
                  (id INTEGER PRIMARY KEY, usluga TEXT, datum TEXT, vreme TEXT, 
                   ime TEXT, telefon TEXT)''')
+    
     # Provera da li ima termina, ako ne - ubaci ih
     c.execute("SELECT count(*) FROM rezervacije")
     if c.fetchone()[0] == 0:
-        for sat in ["09:00", "10:00", "11:00", "12:00"]:
+        termini = ["09:00", "10:00", "11:00", "12:00"]
+        for sat in termini:
             c.execute("INSERT INTO rezervacije (datum, vreme) VALUES (?, ?)", ('2026-07-20', sat))
+            
     c.execute('''CREATE TABLE IF NOT EXISTS konfiguracija (lozinka TEXT)''')
     c.execute("SELECT * FROM konfiguracija")
     if not c.fetchone():
@@ -22,11 +25,11 @@ def init_db():
 
 init_db()
 
-# --- 2. Prikaz ---
+# --- 2. Zaglavlje ---
 st.image("IMG_20260718_151846.jpg", width=300)
 st.title("Zakazivanje termina")
 
-# Admin panel (uvek dostupan za prijavu)
+# --- 3. Admin Panel ---
 with st.expander("🔑 Admin pristup"):
     if "admin_ulogovan" not in st.session_state: st.session_state.admin_ulogovan = False
     
@@ -41,39 +44,39 @@ with st.expander("🔑 Admin pristup"):
                 st.rerun()
             conn.close()
     else:
-        # Ovde upravljaš terminima
+        st.subheader("Upravljanje terminima")
         conn = sqlite3.connect('termini.db')
         c = conn.cursor()
         c.execute("SELECT * FROM rezervacije")
-        termini = c.fetchall()
-        for t in termini:
+        for t in c.fetchall():
             col1, col2 = st.columns([3, 1])
-            status = f"{t[3]} - {t[4] if t[4] else 'SLOBODNO'}"
-            col1.write(status)
-            if t[4]:
+            prikaz = f"{t[3]} - {t[4] if t[4] else 'SLOBODNO'}"
+            col1.write(prikaz)
+            if t[4]: # Ako je zauzeto
                 if col2.button("Oslobodi", key=f"del_{t[0]}"):
                     c.execute("UPDATE rezervacije SET ime=NULL, telefon=NULL, usluga=NULL WHERE id=?", (t[0],))
                     conn.commit()
                     st.rerun()
         conn.close()
 
-# --- 3. Forma za klijente (Sada uvek vidljiva) ---
+# --- 4. Forma za klijente ---
+st.subheader("Rezervacija")
 conn = sqlite3.connect('termini.db')
 c = conn.cursor()
 c.execute("SELECT id, vreme FROM rezervacije WHERE ime IS NULL")
 slobodni = c.fetchall()
 conn.close()
 
-if slobodni:
-    with st.form("klijent_forma"):
-        ime = st.text_input("Ime i prezime")
-        telefon = st.text_input("Telefon")
-        usluga = st.selectbox("Usluga", ["Šišanje", "Brijanje", "Stilizovanje"])
-        izabrani_termin = st.selectbox("Slobodan termin", [t[1] for t in slobodni])
-        
+with st.form("klijent_forma"):
+    ime = st.text_input("Ime i prezime")
+    telefon = st.text_input("Telefon")
+    usluga = st.selectbox("Usluga", ["Šišanje", "Brijanje", "Stilizovanje"])
+    
+    if slobodni:
+        izabrani = st.selectbox("Slobodan termin", [t[1] for t in slobodni])
         if st.form_submit_button("Zakaži"):
             if ime and telefon:
-                termin_id = [t[0] for t in slobodni if t[1] == izabrani_termin][0]
+                termin_id = [t[0] for t in slobodni if t[1] == izabrani][0]
                 conn = sqlite3.connect('termini.db')
                 c = conn.cursor()
                 c.execute("UPDATE rezervacije SET ime=?, telefon=?, usluga=? WHERE id=?", 
@@ -82,5 +85,8 @@ if slobodni:
                 conn.close()
                 st.success("Uspešno zakazano!")
                 st.rerun()
-else:
-    st.warning("Svi termini su trenutno zauzeti. Uloguj se kao admin i oslobodi neki termin.")
+            else:
+                st.error("Molimo unesite ime i telefon.")
+    else:
+        st.warning("Svi termini su zauzeti. Molimo kontaktirajte admina.")
+        st.form_submit_button("Zakaži", disabled=True)
