@@ -57,8 +57,8 @@ with st.expander("🔑 Admin pristup"):
         c = conn.cursor()
         c.execute("SELECT * FROM rezervacije WHERE ime IS NOT NULL")
         for t in c.fetchall():
-            # Ažuriran prikaz: dodata usluga (t[1]) na početak
             col1, col2 = st.columns([3, 1])
+            # Prikaz usluge (t[1])
             col1.write(f"**{t[1]}** | {t[2]} {t[3]} - {t[4]} ({t[5]})")
             if col2.button("Oslobodi", key=f"del_{t[0]}"):
                 c.execute("UPDATE rezervacije SET ime=NULL, telefon=NULL, usluga=NULL WHERE id=?", (t[0],))
@@ -88,15 +88,17 @@ with st.form("klijent_forma"):
     if slobodni:
         mapa = {t[1]: t[0] for t in slobodni}
         termin = st.selectbox("Slobodan termin", list(mapa.keys()))
+        
         if st.form_submit_button("Zakaži"):
             conn = sqlite3.connect('termini.db')
             c = conn.cursor()
             c.execute("UPDATE rezervacije SET ime=?, telefon=?, usluga=? WHERE id=?", (ime, tel, usluga, mapa[termin]))
             conn.commit()
             conn.close()
-            # Prikaz potvrde klijentu
             st.success(f"Uspešno ste zakazali: {usluga}, dana {datum} u {termin}.")
-            if st.button("Nova rezervacija"):
-                st.rerun()
     else:
         st.warning("Nema slobodnih termina.")
+
+# Dugme van forme
+if st.button("Nova rezervacija"):
+    st.rerun()
