@@ -9,7 +9,6 @@ def init_db():
                  (id INTEGER PRIMARY KEY, usluga TEXT, datum TEXT, vreme TEXT, 
                   ime TEXT, telefon TEXT)''')
     
-    # Ako je tabela prazna, kreiramo šablon termina
     c.execute("SELECT count(*) FROM rezervacije")
     if c.fetchone()[0] == 0:
         dani = ['2026-07-20', '2026-07-21']
@@ -48,16 +47,13 @@ with st.expander("🔑 Admin pristup"):
         st.subheader("Pregled zakazanih termina")
         conn = sqlite3.connect('termini.db')
         c = conn.cursor()
-        c.execute("SELECT * FROM rezervacije WHERE ime IS NOT NULL")
+        c.execute("SELECT * FROM rezervacije")
         zakazani = c.fetchall()
-        
-        if not zakazani:
-            st.write("Nema zakazanih termina.")
-        else:
-            for t in zakazani:
-                info = f"{t[2]} u {t[3]} - {t[4]} ({t[5]}) - Usluga: {t[1]}"
-                col1, col2 = st.columns([3, 1])
-                col1.write(info)
+        for t in zakazani:
+            info = f"{t[2]} {t[3]} - {t[4] if t[4] else 'SLOBODAN'}"
+            col1, col2 = st.columns([3, 1])
+            col1.write(info)
+            if t[4]:
                 if col2.button("Oslobodi", key=f"del_{t[0]}"):
                     c.execute("UPDATE rezervacije SET ime=NULL, telefon=NULL, usluga=NULL WHERE id=?", (t[0],))
                     conn.commit()
@@ -69,7 +65,6 @@ st.subheader("Rezervacija")
 conn = sqlite3.connect('termini.db')
 c = conn.cursor()
 
-# Uzimamo listu svih datuma
 c.execute("SELECT DISTINCT datum FROM rezervacije")
 svi_datumi = [row[0] for row in c.fetchall()]
 
@@ -79,9 +74,13 @@ with st.form("klijent_forma"):
     usluga = st.selectbox("Usluga *", ["Šišanje", "Brijanje", "Stilizovanje"])
     datum = st.selectbox("Datum *", svi_datumi)
     
-    # Provera slobodnih termina: tražimo one gde je 'ime' prazno
-    c.execute("SELECT id, vreme FROM rezervacije WHERE datum=? AND ime IS NULL", (datum,))
-    slobodni_termini = c.fetchall()
+    # DIJAGNOSTIKA: Ovde ispisujemo šta baza vidi za izabrani datum
+    c.execute("SELECT id, vreme, ime, telefon FROM rezervacije WHERE datum=?", (datum,))
+    podaci = c.fetchall()
+    st.write("Debug - Podaci iz baze za izabrani datum:", podaci)
+    
+    # Filtriramo slobodne (gde su ime i telefon None/prazni)
+    slobodni_termini = [t for t in podaci if t[2] is None]
     
     if slobodni_termini:
         termin_map = {t[1]: t[0] for t in slobodni_termini}
@@ -93,11 +92,11 @@ with st.form("klijent_forma"):
                 c.execute("UPDATE rezervacije SET ime=?, telefon=?, usluga=? WHERE id=?", 
                           (ime, telefon, usluga, termin_id))
                 conn.commit()
-                st.success(f"Uspešno ste zakazali {usluga} za {datum} u {izabrani_termin}.")
+                st.success("Uspešno zakazano!")
                 st.rerun()
             else:
-                st.error("Molimo popunite sva obavezna polja.")
+                st.error("Popunite ime i telefon.")
     else:
-        st.warning("Za izabrani dan nema slobodnih termina. Molimo izaberite neki drugi dan.")
+        st.warning("Nema slobodnih termina za ovaj dan.")
         st.form_submit_button("Zakaži", disabled=True)
 conn.close()
