@@ -2,6 +2,15 @@ import streamlit as st
 import sqlite3
 
 # --- 1. Inicijalizacija ---
+# (Zadrži ostatak funkcije init_db() koju već imaš)
+
+# --- 2. Prikaz Logo-a ---
+# Koristimo st.image za prikaz tvog fajla
+st.image("IMG_20260718_151846.jpg", width=300)
+
+# --- 3. Naslov i ostatak aplikacije ---
+st.title("Zakazivanje termina")
+# (Nastavi sa ostatkom koda...)
 def init_db():
     conn = sqlite3.connect('termini.db')
     c = conn.cursor()
