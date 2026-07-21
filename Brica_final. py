@@ -1,6 +1,5 @@
 import streamlit as st
 import sqlite3
-import os
 from datetime import datetime, timedelta
 
 # ---------- KONFIGURACIJA ----------
@@ -15,7 +14,7 @@ def init_db():
     
     c.execute('''CREATE TABLE IF NOT EXISTS rezervacije 
                  (id INTEGER PRIMARY KEY, usluga TEXT, datum TEXT, vreme TEXT, 
-                  ime TEXT, telefon TEXT, cena INTEGER, naplaceno INTEGER DEFAULT 0, datum_naplate TEXT)''')
+                  ime TEXT, telefon TEXT, cena INTEGER, naplaceno INTEGER DEFAULT 0)''')
     
     c.execute('''CREATE TABLE IF NOT EXISTS cenovnik (
                     usluga TEXT PRIMARY KEY, 
@@ -77,7 +76,6 @@ def generisi_slotove_za_dan(datum_str):
     c.execute("SELECT vreme FROM pauze WHERE datum=?", (datum_str,))
     pauze = [row[0] for row in c.fetchall()]
     
-    # Brišemo SAMO prazne slotove (ne i zauzete)
     c.execute("DELETE FROM rezervacije WHERE datum=? AND ime IS NULL", (datum_str,))
     
     sat_start, min_start = RADNO_VREME[0]
@@ -137,7 +135,6 @@ def rezervisi_blok(datum, pocetak, trajanje, ime, telefon, usluga, cena):
     if trajanje % INTERVAL_MIN != 0:
         broj_slotova += 1
     
-    # Dohvati ID-ove slotova
     c.execute("""
         SELECT id FROM rezervacije 
         WHERE datum=? AND vreme >= ? AND ime IS NULL 
@@ -150,7 +147,6 @@ def rezervisi_blok(datum, pocetak, trajanje, ime, telefon, usluga, cena):
         conn.close()
         return False
     
-    # Ažuriraj svaki slot
     for id in ids:
         c.execute("""
             UPDATE rezervacije 
@@ -160,7 +156,6 @@ def rezervisi_blok(datum, pocetak, trajanje, ime, telefon, usluga, cena):
     
     conn.commit()
     
-    # Provera
     c.execute("SELECT COUNT(*) FROM rezervacije WHERE ime=? AND datum=? AND vreme=?", (ime, datum, pocetak))
     count = c.fetchone()[0]
     conn.close()
@@ -168,7 +163,7 @@ def rezervisi_blok(datum, pocetak, trajanje, ime, telefon, usluga, cena):
     return count > 0
 
 # ---------- UI ----------
-st.set_page_config(page_title="💈 Zakazivanje", layout="centered")
+st.set_page_config(page_title="💈 Berberski salon - Zakazivanje", layout="centered")
 
 st.title("💈 Berberski salon - Zakazivanje")
 
