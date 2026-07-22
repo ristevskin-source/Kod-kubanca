@@ -16,6 +16,12 @@ def init_db():
                  (id INTEGER PRIMARY KEY, usluga TEXT, datum TEXT, vreme TEXT, 
                   ime TEXT, telefon TEXT, cena INTEGER, naplaceno INTEGER DEFAULT 0)''')
     
+    # Dodajemo kolonu datum_naplate ako ne postoji
+    try:
+        c.execute("ALTER TABLE rezervacije ADD COLUMN datum_naplate TEXT")
+    except sqlite3.OperationalError:
+        pass  # Kolona već postoji, ignorišemo
+    
     c.execute('''CREATE TABLE IF NOT EXISTS cenovnik (
                     usluga TEXT PRIMARY KEY, 
                     cena INTEGER,
